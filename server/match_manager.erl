@@ -69,13 +69,13 @@ loop(Map)->
 	%	- Quais Jogadores e disponibilidade (0 - Not Ready // 1 - Ready)
 	receive 
 		{create_match,Match_name,Lider,From} ->
-			case maps:is_key(Match_name,Map) of
+			case maps:find(Match_name,Map) of
 				true ->
 					From ! {match_exists,?MODULE},
 					loop(Map);
 				false ->
 					From ! {ok,?MODULE},
-					loop(map:put(Match_name,{Lider,0,0,#{Username=>0}},Map))
+					loop(map:put(Match_name,{Lider,0,0,#{Lider=>0}},Map))
 			end;
 		{delete_match,Match_name,Lider,From} ->
 			case maps:find(Match_name,Map) of
@@ -141,3 +141,8 @@ loop(Map)->
 				_->
 					From ! {match_not_found,?MODULE}
 	end.
+
+%Falta começar o jogo quando estão todos prontos
+%Falta restringir o nivel dos jogadores ao entrar nos lobbies
+
+%Game = spawn(fun()->game() end),
