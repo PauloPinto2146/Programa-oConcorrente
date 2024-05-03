@@ -95,5 +95,5 @@ loop(Map) ->
                         % ou apenas [User || {User,{_,true}} <- maps:to_list(Map)]
                         From ! {Users,?MODULE},
                         loop(Map)
-			end;
+			end
 	end.

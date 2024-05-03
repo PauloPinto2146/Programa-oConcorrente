@@ -96,4 +96,7 @@ loop(Map)->
 			SortedPlayers = lists:keysort(2,List),
     		print_top_players(SortedPlayers, 10),
     		loop(Map).
+    	{get_level,Username,From}->
+    		Level = maps:get(Username,Map)
+    		From ! {receive_level,Level,self()}
 	end.
