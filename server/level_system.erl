@@ -1,5 +1,12 @@
 -module(level_system).
--export([start/0]).
+-export([start/0,
+		new_player/1,
+		win_game/1,
+		lose_game/1,
+		top10/0,
+		print_top_players/2,
+		map_tolist_level/1,
+		loop/1]).
 
 %Level 1 - 1 partida ganha
 %Level 2 - 2 partidas ganhas
@@ -7,7 +14,7 @@
 %...
 
 start() -> 
-	register(?MODULE,spawn(fun() -> loop(#{}) end)). 
+    register(?MODULE, spawn(fun() -> loop(#{}) end)).
 
 new_player(Username) -> %Quando nova conta é criada é criado também o perfil do jogador
 	receive
@@ -19,28 +26,28 @@ new_player(Username) -> %Quando nova conta é criada é criado também o perfil 
 	end.
 
 win_game(Username)-> %Quando ganha jogo precisa atualizar
-	?MODULE ! {win_game,Username,self()}
+	?MODULE ! {win_game,Username,self()},
 	receive
 		{Res,?MODULE} -> Res;
 		{won_game,?MODULE} -> io:format("YOU WIN!")
 	end.
 
 lose_game(Username)->
-	?MODULE ! {lose_game,Username,self()}
+	?MODULE ! {lose_game,Username,self()},
 	receive
 		{Res,?MODULE} -> Res;
 		{lost_game,?MODULE} -> io:format("YOU LOST!")
 	end.
 
 top10()->
-	?MODULE ! {top10,self()}
+	?MODULE ! {top10},
 	receive
-		{Res,?MODULE} -> Res;
+		{Res,?MODULE} -> Res
 	end.
 
-print_top_players(_, 0) -> 
+print_top_players(_, 0) ->
     ok;
-print_top_players([{Player, Nivel,Pganhas,Pperdidas,Pcons} | Tail], Count) ->
+print_top_players([{Player, Nivel,_,_,_} | Tail], Count) ->
     io:format("~s: Nível ~B~n", [Player, Nivel]),
     print_top_players(Tail, Count - 1).
 
@@ -68,35 +75,37 @@ loop(Map)->
 			end;
 		{win_game,Username,From}->
 			case maps:find(Username,Map) of
-				{ok,{Level,WinsPerLevel,Wins,_,LossesCons}} ->
+				{ok,{Level,WinsPerLevel,Wins,Losses,_}} ->
 					if Wins == Level ->
-						loop(map:update(Username,{Level+1,0,Wins+1,_,0},Map));
+						loop(map:update(Username,{Level+1,0,Wins+1,Losses,0},Map));
 					Wins < Level ->
 						From ! {ok,?MODULE},
-						loop(map:update(Username,{Level,WinsPerLevel+1,Wins+1,_,0},Map));
+						loop(map:update(Username,{Level,WinsPerLevel+1,Wins+1,Losses,0},Map))
+					end;
 				_ ->
 					From ! {invalid, ?MODULE},
 					loop(Map)
 			end;
 		{lose_game,Username,From}->
 			case maps:find(Username,Map) of
-				{ok,{Level,_,_,Losses,LossesCons}} ->
+				{ok,{Level,WinsPerLevel,Wins,Losses,LossesCons}} ->
 					if LossesCons == Level/2 ->
-						loop(map:update(Username,{Level-1,_,_,Losses+1,0},Map));
+						loop(map:update(Username,{Level-1,WinsPerLevel,Wins,Losses+1,0},Map));
 					LossesCons < Level/2 ->
 						From ! {ok,?MODULE},
-						loop(map:update(Username,{Level,_,_,Losses+1,LossesCons+1},Map));
+						loop(map:update(Username,{Level,WinsPerLevel,Wins,Losses+1,LossesCons+1},Map))
+				end;
 				_ ->
 					From ! {invalid, ?MODULE},
 					loop(Map)
 			end;
-		{top10,From}->
+		{top10}->
 			Map_only_level = map_tolist_level(Map),
 			List = maps:to_list(Map_only_level),
 			SortedPlayers = lists:keysort(2,List),
     		print_top_players(SortedPlayers, 10),
-    		loop(Map).
+    		loop(Map);
     	{get_level,Username,From}->
-    		Level = maps:get(Username,Map)
+    		Level = maps:get(Username,Map),
     		From ! {receive_level,Level,self()}
 	end.
