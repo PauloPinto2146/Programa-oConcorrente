@@ -1,11 +1,10 @@
 -module(lobby_manager).
 -export([start/0,
 		find_Lobby/2,
-		cancel_find/2,
-		lobby/1]).
+		cancel_find/2]).
 
 start() -> 
-	register(?MODULE,spawn(fun() -> lobby(#{}) end)). 
+	register(?MODULE,spawn(fun() -> lobby([]) end)). 
 
 %Lobby = spawn(fun()->lobby(maps:put(Nivel,LiderUsername,PlayerMap)) end),
 
@@ -26,7 +25,7 @@ cancel_find(LobbyLevel,Player)->
 	end.
 
 lobby(PlayerMap)-> %Lobbies de jogadores
-	%PlayerMap = Lobby : list(Jogadores)
+	%PlayerMap = LobbyLevel : list(Jogadores)
 	receive
 		{find_Lobby,Username,PlayerLevel,From}->
 			case {maps:find(PlayerLevel, PlayerMap), 
@@ -34,17 +33,24 @@ lobby(PlayerMap)-> %Lobbies de jogadores
      			 maps:find(PlayerLevel - 1, PlayerMap)} of
 				{ok,PlayerList}	->
 					case length(PlayerList) of
-						4 ->
-                            From ! {full, ?MODULE},
-                            ?MODULE ! {create_lobby, Username, PlayerLevel},
-                            lobby(PlayerMap);
+						%Se tem 2 dá 5seg para entrar até 4 
                         3 ->
-                            spawn(fun() -> receive after 5000 -> match_manager ! start end end),
                             NewPlayerList = lists:append([Username], PlayerList),
                             lobby(maps:remove(PlayerLevel, NewPlayerList));
-                        _ ->
+						2 ->
+							NewPlayerList = lists:append([Username], PlayerList),
+							lobby(maps:remove(PlayerLevel, NewPlayerList));
+                        1 ->
                             NewPlayerList = lists:append([Username], PlayerList),
-                            lobby(maps:update(PlayerLevel, NewPlayerList, PlayerMap))
+							spawn(fun() -> 
+									receive after 5000 -> 
+										match_manager ! {create_match,PlayerList}
+									end
+								end),
+                            lobby(maps:update(PlayerLevel, NewPlayerList, PlayerMap));
+						_ ->
+							From ! {full, ?MODULE},
+							lobby(PlayerMap)
                     end;
 				_->
 					?MODULE ! {create_lobby,Username,PlayerLevel},

@@ -8,17 +8,13 @@
 		loop/1]).
 
 start() -> 
-	register(?MODULE,spawn(fun() -> loop(#{}) end)). 
-	%?MODULE usa o nome do módulo como constante
-	%Damos spawn do PID diretamente na função register
-
+	register(?MODULE,spawn(fun() -> loop(#{}) end)).
 create_account(Username, Passwd) ->% ok | user_exists.
 	?MODULE ! {create_account,Username,Passwd,self()}, %lança para o loop
 	receive
 		{Res,?MODULE} -> Res;
 		{user_exists,?MODULE} -> io:format("ERROR:User_Already_Exists")
 	end.
-
 close_account(Username, Passwd) -> %ok | invalid.
 	?MODULE ! {create_account,Username,Passwd,self()},
 	receive

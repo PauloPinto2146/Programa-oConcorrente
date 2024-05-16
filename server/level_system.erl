@@ -1,8 +1,6 @@
 -module(level_system).
 -export([start/0,
 		new_player/1,
-		win_game/1,
-		lose_game/1,
 		top10/0,
 		print_top_players/2,
 		map_tolist_level/1,
@@ -53,8 +51,6 @@ print_top_players([{Player, Nivel,_,_,_} | Tail], Count) ->
 
 map_tolist_level(PlayerMap)->
 	maps:fold(fun(Username, {Nivel, _, _, _}, Acc) -> maps:put(Username, Nivel, Acc) end, #{}, PlayerMap).
-	% fold(Fun, Init, MapOrIter) -> Acc
-	% #{} é o estado inicial do acumulador
 
 loop(Map)->
 	%Username
@@ -109,3 +105,4 @@ loop(Map)->
     		Level = maps:get(Username,Map),
     		From ! {receive_level,Level,self()}
 	end.
+
