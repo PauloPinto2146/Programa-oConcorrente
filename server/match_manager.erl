@@ -1,23 +1,17 @@
 -module(match_manager).
--export([start/1]).
+-export([start/0]).
 
-start(Port) -> 
-	receive
-		{create_match,PlayerList}->
-			%Cria servidor e manda para cada jogador
-			MatchPid = spawn(fun() -> server(Port,PlayerList) end),
-			lists:foreach(fun(Player) -> 
-							Player ! {match_pid, MatchPid}
-						end, PlayerList),
-			MatchPid
-	end.
+start() -> 
+	%SomeHostInNet = "localhost" 
+	%Criar servidor - Porta Localhost
+	MatchPid = spawn(fun() -> server(8080) end).
 
 stop(Server) -> Server ! stop.
 
-server(Port,PlayerList) ->
+server(Port) ->
 	{ok, LSock} = gen_tcp:listen(Port, [binary, {packet, line}, {reuseaddr, true}]),
-	Room = spawn(fun()-> game(PlayerList) end),
-	spawn(fun() -> acceptor(LSock, Room) end),
+	Room = spawn(fun() -> room([]) end),
+	spawn(fun()-> acceptor(LSock,Room)end),
 	receive stop -> ok end.
 
 acceptor(LSock, Room) ->
@@ -26,18 +20,21 @@ acceptor(LSock, Room) ->
 	Room ! {enter, self()},
 	user(Sock, Room).
 
-game(Jogadores)->
+room(Sockets) ->
 	receive
-		{enter, Jogador} ->
-			io:format("user entered˜n", []),
-			game([Jogador | Jogadores]);
-		{line, Data} = Msg ->
-			io:format("received ˜p˜n", [Data]),
-		[Jogador ! Msg || Jogador <- Jogadores],
-			game(Jogadores);
-		{leave, Jogador} ->
-		io:format("user left˜n", []),
-			game(Jogadores -- [Jogador])
+	{new_user, Sock} ->
+		io:format("new user~n", []),
+		room([Sock | Sockets]);
+	{tcp, _, Data} ->
+		io:format("received ~p~n", [Data]),
+		[gen_tcp:send(Socket, Data) || Socket <- Sockets],
+		room(Sockets);
+	{tcp_closed, Sock} ->
+		io:format("user disconnected~n", []),
+		room(Sockets -- [Sock]);
+	{tcp_error, Sock, _} ->
+		io:format("tcp error~n", []),
+		room(Sockets -- [Sock])
 	end.
 
 user(Sock, Room) ->
