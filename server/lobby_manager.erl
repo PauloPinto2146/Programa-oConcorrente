@@ -1,15 +1,15 @@
 -module(lobby_manager).
--export([start/0,
+-export([startLobbyManager/0,
 		find_Lobby/2,
 		cancel_find/2]).
 
-start() -> 
+startLobbyManager() -> 
 	register(?MODULE,spawn(fun() -> lobby([]) end)). 
 
 %Lobby = spawn(fun()->lobby(maps:put(Nivel,LiderUsername,PlayerMap)) end),
 
 find_Lobby(Username,Nivel)->
-	?MODULE ! {add_player,Username,Nivel,self()},
+	?MODULE ! {find_Lobby,Username,Nivel,self()},
 	receive
 		{Res,?MODULE} -> Res;
 		{full}->
@@ -27,11 +27,12 @@ cancel_find(LobbyLevel,Player)->
 lobby(PlayerMap)-> %Lobbies de jogadores
 	%PlayerMap = LobbyLevel : list(Jogadores)
 	receive
+		%Se entrar level 2 e level 3 só pode entrar 2 ou 3
 		{find_Lobby,Username,PlayerLevel,From}->
 			case {maps:find(PlayerLevel, PlayerMap), 
      			 maps:find(PlayerLevel + 1, PlayerMap), 
      			 maps:find(PlayerLevel - 1, PlayerMap)} of
-				{ok,PlayerList}	->
+				{ok, PlayerList}	->
 					case length(PlayerList) of
 						%Se tem 2 dá 5seg para entrar até 4 
                         3 ->

@@ -1,5 +1,5 @@
 -module(login_manager).
--export([start/0,
+-export([startLoginManager/0,
 		create_account/2,
 		close_account/2,
 		login/2,
@@ -7,7 +7,7 @@
 		online/0,
 		loop/1]).
 
-start() -> 
+startLoginManager() -> 
 	register(?MODULE,spawn(fun() -> loop(#{}) end)).
 create_account(Username, Passwd) ->% ok | user_exists.
 	?MODULE ! {create_account,Username,Passwd,self()}, %lança para o loop
@@ -26,7 +26,7 @@ login(Username, Passwd) -> %ok | invalid.
 	receive
 		{Res,?MODULE} -> Res;
 		{invalid, ?MODULE} -> io:format("ERROR:Invalid_Username_for_Login")
-		end.
+	end.
 logout(Username) -> %ok.
 	?MODULE ! {login,Username,self()},
 	receive
@@ -47,15 +47,14 @@ loop(Map) ->
 					loop(Map);
 				false ->
 					From ! {ok,?MODULE},
-					loop(map:put(Username,{Passwd,true,0},Map))
+					loop(map:put(Username,{Passwd,0},Map))
 					%Password, 
-					%booleano se tá login ou não, 
 					%nivel
 			end;
 		{close_account,Username,Passwd,From} ->
 			case maps:find(Username,Map) of
 				%{ok,{Pass,_}} when Pass =:= Passwd -> 
-				{ok,{Passwd,_,_}} ->
+				{ok,{Passwd,_}} ->
 					From ! {ok,?MODULE},
 					loop(map:remove(Username,Map));
 				_ ->
@@ -64,9 +63,9 @@ loop(Map) ->
 			end;
 		{login,Username,Passwd,From}->
 			case maps:find(Username,Map) of
-				{ok,{Passwd,false,On}} ->
+				{ok,{Passwd,Nivel}} ->
 					From ! {ok,?MODULE},
-					loop(map:update(Username,{Passwd,true,On},Map));
+					loop(map:update(Username,{Passwd,Nivel},Map));
 				_ ->
 					From ! {invalid, ?MODULE},
 					loop(Map)
@@ -81,12 +80,12 @@ loop(Map) ->
 					From ! {invalid, ?MODULE},
 					loop(Map)
 			end;
-			{online, From} ->
-					Fun = fun(Username,{_,true,_,_,_,_},Acc) -> 
-						[Username|Acc]; 
-						(_,_,Acc) -> Acc end,
-                    Users = maps:fold(Fun,{},Map),
-                    % ou apenas [User || {User,{_,true}} <- maps:to_list(Map)]
-				    From ! {Users,?MODULE},
-			        loop(Map)
+		{online, From} ->
+				Fun = fun(Username,{_,true,_,_,_,_},Acc) -> 
+					[Username|Acc]; 
+					(_,_,Acc) -> Acc end,
+                Users = maps:fold(Fun,{},Map),
+                % ou apenas [User || {User,{_,true}} <- maps:to_list(Map)]
+				From ! {Users,?MODULE},
+			    loop(Map)
 	end.

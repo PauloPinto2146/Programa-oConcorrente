@@ -1,7 +1,7 @@
 -module(game).
--export([start/0]).
+-export([startGame/0]).
 
-start(Players) -> 
+startGame(Players) -> 
 	register(?MODULE,spawn(fun() -> loop(Players) end)).
 
 %Constante força da gravidade: Servidor ou Cliente??

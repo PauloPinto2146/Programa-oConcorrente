@@ -1,5 +1,5 @@
 -module(level_system).
--export([start/0,
+-export([startLevelSystem/0,
 		new_player/1,
 		top10/0,
 		print_top_players/2,
@@ -11,7 +11,7 @@
 %Level 3 - 3 partidas ganhas 
 %...
 
-start() -> 
+startLevelSystem() -> 
     register(?MODULE, spawn(fun() -> loop(#{}) end)).
 
 new_player(Username) -> %Quando nova conta é criada é criado também o perfil do jogador
