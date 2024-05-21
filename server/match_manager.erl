@@ -20,27 +20,26 @@ acceptor(LSock, Room) ->
 	Room ! {enter, self()},
 	user(Sock, Room).
 
-room(Sockets) ->
+room(Pids) ->
 	receive
-	{new_user, Sock} ->
-		io:format("new user~n", []),
-		room([Sock | Sockets]);
-	{tcp, _, Data} ->
+	{enter, Pid} ->
+		io:format("user entered~n", []),
+		room([Pid | Pids]);
+	{line, Data} = Msg ->
 		io:format("received ~p~n", [Data]),
-		[gen_tcp:send(Socket, Data) || Socket <- Sockets],
-		room(Sockets);
-	{tcp_closed, Sock} ->
-		io:format("user disconnected~n", []),
-		room(Sockets -- [Sock]);
-	{tcp_error, Sock, _} ->
-		io:format("tcp error~n", []),
-		room(Sockets -- [Sock])
+		[Pid ! Msg || Pid <- Pids],
+		room(Pids);
+	{leave, Pid} ->
+		io:format("user left~n", []),
+		room(Pids -- [Pid])
 	end.
 
 user(Sock, Room) ->
 	receive
 	{line, Data} ->
 		gen_tcp:send(Sock, Data),
+		%Lança para Java o Socket que tem que ser processado onde pode ter informação sobre o que quer fazer
+		%O Java processa e lança novamente o Socket da função que quer fazer do Erlang
 		user(Sock, Room);
 	{tcp, _, Data} ->
 		Room ! {line, Data},
