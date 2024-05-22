@@ -29,7 +29,6 @@ int TextBoxHeight = 40;
 
 String activeScreen = "MENU";
 
-String title = "The Game";
 int titleSize = 48;
 
 int flickerDuration = 50; // Flicker duration in milliseconds
@@ -75,6 +74,8 @@ void draw() {
     drawRegisterPopup();
   } else if (activeScreen == "TUTORIAL_POPUP") {
     drawTutorialPopup();
+  } else if (activeScreen == "LOBBY") {
+    drawLobby();
   } else if (activeScreen == "START_GAME"){
     drawGame();
   }
@@ -132,19 +133,14 @@ void drawMenu() {
   textAlign(CENTER, CENTER); // Center align the title
   textSize(titleSize);
   fill(66, 135, 245); // Blue color
-  text(title, width / 2, height / 4 - 25);
+  text("The Game", width / 2, height / 4 - 25);
 
   // Calculate the y-position for the first button
   int startY = height / 2 - buttonHeight * 2;
 
-  // Draw buttons
-  if (loggedIn == true){
-    drawButton(buttonX, startY - buttonHeight-buttonSpacing, "Start Game", menuButtonIndex == 1, blue);
-  }
-  drawButton(buttonX, startY, "Login", menuButtonIndex == 2, blue);
-  drawButton(buttonX, startY + buttonHeight + buttonSpacing, "Register", menuButtonIndex == 3, blue);
-  drawButton(buttonX, startY + buttonHeight * 2 + buttonSpacing * 2, "Tutorial", menuButtonIndex == 4, blue);
-  drawButton(buttonX, startY + buttonHeight * 3 + buttonSpacing * 3, "Quit", menuButtonIndex == 5, blue);
+  drawButton(buttonX, startY, "Login", menuButtonIndex == 1, blue);
+  drawButton(buttonX, startY + buttonHeight + buttonSpacing, "Register", menuButtonIndex == 2, blue);
+  drawButton(buttonX, startY + buttonHeight * 2 + buttonSpacing * 2, "Quit", menuButtonIndex == 3, blue);
 }
 
 void drawLoginPopup() {
@@ -215,6 +211,20 @@ void drawRegisterPopup() {
   text("Press BACKSPACE to return", popupX, popupY + popupHeight - 35, popupWidth, 40);
 }
 
+void drawLobby(){
+  // Draw title
+  textAlign(CENTER, CENTER); // Center align the title
+  textSize(titleSize);
+  fill(66, 135, 245); // Blue color
+  text("Lobby", width / 2, height / 4 - 25);
+
+  // Calculate the y-position for the first button
+  int startY = height / 2 - buttonHeight * 2;
+  
+  drawButton(buttonX, startY, "Start Game", menuButtonIndex == 1, blue);
+  drawButton(buttonX, startY + buttonHeight  + buttonSpacing, "Tutorial", menuButtonIndex == 2, blue);
+  drawButton(buttonX, startY + buttonHeight * 2 + buttonSpacing * 2, "Logout", menuButtonIndex == 3, blue);
+}
 
 void drawTutorialPopup() {
   // Draw semi-transparent background
@@ -288,20 +298,16 @@ void drawTextBox(int x, int y, boolean focused, color boxColor, String text) {
 
 void keyPressed() {
   if (activeScreen == "START_GAME"){
-    if(keyCode == UP)
+    if(keyCode == UP || key == 'w'){
       println("Started game");
+    }
   }
   if (activeScreen == "MENU") {
     if (keyCode == UP || key == 'w') {
-      if(loggedIn){
-        menuButtonIndex = max(1, menuButtonIndex - 1);
-      }
-      else{
-        menuButtonIndex = max(2, menuButtonIndex - 1);
-      }
+      menuButtonIndex = max(1, menuButtonIndex - 1);
       lastFocusTime = millis();
     } else if (keyCode == DOWN || key == 's') {
-      menuButtonIndex = min(5, menuButtonIndex + 1);
+      menuButtonIndex = min(3, menuButtonIndex + 1);
       lastFocusTime = millis();
     }
     println(menuButtonIndex);
@@ -310,6 +316,8 @@ void keyPressed() {
       typing();
     } else {
       if (key == BACKSPACE) {
+        popupUsername = "Username";
+        popupPassword = "Password";
         activeScreen = "MENU"; // Navigate back to the menu screen
       }
       if (keyCode == UP || key == 'w') {
@@ -325,6 +333,9 @@ void keyPressed() {
       typing();
     } else {
       if (key == BACKSPACE) {
+        popupUsername = "Username";
+        popupPassword = "Password";
+        confirmPassword = "Confirm Password";
         activeScreen = "MENU"; // Navigate back to the menu screen
       }
       if (keyCode == UP || key == 'w') {
@@ -335,10 +346,17 @@ void keyPressed() {
         lastFocusTime = millis();
       }
     }
+  } if (activeScreen == "LOBBY") {
+      if (keyCode == UP || key == 'w') {
+        menuButtonIndex = max(1, menuButtonIndex - 1);
+        lastFocusTime = millis();
+      } else if (keyCode == DOWN || key == 's') {
+        menuButtonIndex = min(3, menuButtonIndex + 1);
+        lastFocusTime = millis();
+      }
   } else if (activeScreen == "TUTORIAL_POPUP") {
-    // Check for custom back key press
     if (key == BACKSPACE) {
-      activeScreen = "MENU"; // Navigate back to the menu screen
+      activeScreen = "LOBBY";
     }
   }
 }
@@ -349,17 +367,12 @@ void keyReleased() {
     if (key == ENTER || key == ' ') {
       switch (menuButtonIndex) {
         case 1:
-          activeScreen = "START_GAME";
-        case 2:
           activeScreen = "LOGIN_POPUP";
           break;
-        case 3:
+        case 2:
           activeScreen = "REGISTER_POPUP";
           break;
-        case 4:
-          activeScreen = "TUTORIAL_POPUP";
-          break;
-        case 5:
+        case 3:
           exit();
           break;
       }
@@ -369,17 +382,22 @@ void keyReleased() {
       switch (popupButtonIndex) {
         case 1:
           typing = !typing;
+          if(popupUsername == "Username") popupUsername = "";
           println(popupUsername);
           break;
         case 2:
           typing = !typing;
+          if(popupPassword == "Password") popupPassword = "";
           println(popupPassword);
           break;
         case 3:
           println("Confirm pressed!");
           println("Socket lançado: " +"00 "+popupUsername + " " + popupPassword);
           socket.write("00 "+popupUsername + " " + popupPassword);
+          // VERIFICAÇÃO DE LOGIN
           loggedIn = true;
+          activeScreen = "LOBBY";
+          break;
       }
     }
   } else if (activeScreen == "REGISTER_POPUP") {
@@ -387,21 +405,43 @@ void keyReleased() {
       switch (popupButtonIndex) {
         case 1:
           typing = !typing;
+          if(popupUsername == "Username") popupUsername = "";
           println(popupUsername);
           break;
         case 2:
           typing = !typing;
+          if(popupPassword == "Password") popupPassword = "";
           println(popupPassword);
           break;
         case 3:
           typing = !typing;
+          if(confirmPassword == "Confirm Password") confirmPassword = "";
           println(confirmPassword);
           break;
         case 4:
           println("Confirm pressed!");
           println("Socket lançado: " +"02 "+popupUsername + " " + popupPassword);
           socket.write("02 "+popupUsername + " " + popupPassword);
+          // VERIFICAÇÃO DE LOGIN
           loggedIn = true;
+          activeScreen = "LOBBY";
+          break;
+      }
+    }
+  } else if (activeScreen == "LOBBY") {
+    if (key == ENTER || key == ' ') {
+      switch (menuButtonIndex) {
+        case 1:
+          activeScreen = "START_GAME";
+          break;
+        case 2:
+          activeScreen = "TUTORIAL_POPUP";
+          break;
+        case 3:
+          popupUsername = "Username";
+          popupPassword = "Password";
+          confirmPassword = "Confirm Password";
+          activeScreen = "MENU";
           break;
       }
     }
