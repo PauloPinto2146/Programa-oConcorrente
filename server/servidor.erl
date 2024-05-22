@@ -26,7 +26,8 @@ acceptor(LSock) ->
 	spawn(fun() -> acceptor(LSock) end),
 	user(Sock,0).
 
-user(Sock,Loggedin) ->
+user(Sock,Mode) ->
+	%Mode : 0 - Not Logged in // 1 - Logged in // 2 - Gaming
 	inet:setopts(Sock, [{active,once}]),
 	receive
 	{line, Data} ->
@@ -34,8 +35,14 @@ user(Sock,Loggedin) ->
 		%Lança para Java o Socket que tem que ser processado onde pode ter informação sobre o que quer fazer
 		%O Java processa e lança novamente o Socket da função que quer fazer do Erlang
 		%segundo codigos de protocolo
-		user(Sock,Loggedin);
-	{tcp, _, Data} when Loggedin =:= 1 ->
+		user(Sock,Mode);
+	{tcp, _, Data} when Mode =:= 1 ->
+		io:format("~p\n",[Data]),
+		case string:split(binary_to_list(Data), " ",all) of
+			["30"] ->
+				"30"
+		end;
+	{tcp, _, Data} when Mode =:= 1 ->
 		io:format("~p\n",[Data]),
 		case string:split(binary_to_list(Data), " ",all) of
 			%Quando está Logged in	
@@ -64,8 +71,8 @@ user(Sock,Loggedin) ->
 				lose_game(Username),
 				user(Sock,1)
 		end,
-		user(Sock,Loggedin);
-	{tcp, _, Data} when Loggedin =:= 0 ->
+		user(Sock,Mode);
+	{tcp, _, Data} when Mode =:= 0 ->
 		io:format("~p\n",[Data]),
 		case string:split(binary_to_list(Data), " ",all) of
 			["00", Username, Password] -> %Login Protocol Code - 00
