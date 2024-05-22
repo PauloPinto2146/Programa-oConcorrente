@@ -1,13 +1,13 @@
-float angle1 = random(360);
-float angle2 = random(360);
-float angle3 = random(360);
-float angle4 = random(360);
+float angle1;
+float angle2;
+float angle3;
+float angle4;
 float centerX = 540; // Coordenada x do centro (Sol)
 float centerY = 360; // Coordenada y do centro (Sol)
-float velocidade1 = random(0.005,0.04);
-float velocidade2 = random(0.001,0.02);
-float velocidade3 = random(0.0008,0.012);
-float velocidade4 = random(0.0005,0.008);
+float velocidade1,velocidade2,velocidade3, velocidade4;
+
+float x1,x2,x3,x4;
+float y1,y2,y3,y4;
 
 float[] starX = new float[100];
 float[] starY = new float[100];
@@ -96,32 +96,32 @@ void drawGame() {
   ellipse(centerX, centerY, 150, 150);
   
   //Planeta 1
-  float x1 = centerX + cos(angle1) * 120;
-  float y1 = centerY + sin(angle1) * 120;
+  x1 = centerX + cos(angle1) * 120;
+  y1 = centerY + sin(angle1) * 120;
   fill(161, 89, 8); 
   noStroke(); 
   ellipse(x1, y1, 15, 15);
   angle1 += velocidade1;
   
   //Planeta 2
-  float x2 = centerX + cos(angle2) * 220;
-  float y2 = centerY + sin(angle2) * 220;
+  x2 = centerX + cos(angle2) * 220;
+  y2 = centerY + sin(angle2) * 220;
   fill(88, 237, 230); 
   noStroke(); 
   ellipse(x2, y2, 25, 25);
   angle2 += velocidade2;
   
   //Planeta 3
-  float x3 = centerX + cos(angle3) * 280;
-  float y3 = centerY + sin(angle3) * 280;
+  x3 = centerX + cos(angle3) * 280;
+  y3= centerY + sin(angle3) * 280;
   fill(10, 120, 10); 
   noStroke(); 
   ellipse(x3, y3, 30, 30);
   angle3 += velocidade3;
   
   //Planeta 4
-  float x4 = centerX + cos(angle4) * 340;
-  float y4 = centerY + sin(angle4) * 340;
+  x4 = centerX + cos(angle4) * 340;
+  y4 = centerY + sin(angle4) * 340;
   fill(119, 2, 222); 
   noStroke(); 
   ellipse(x4, y4, 36, 36);
