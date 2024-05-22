@@ -13,7 +13,8 @@ find_Lobby(Username,Nivel)->
 	receive
 		{Res,?MODULE} -> Res;
 		{full}->
-			io:format("ERROR:Lobby_is_full")
+			io:format("ERROR:Lobby_found_but_full"),
+			find_Lobby(Username,Nivel)
 	end.
 
 cancel_find(LobbyLevel,Player)->
@@ -24,44 +25,67 @@ cancel_find(LobbyLevel,Player)->
 			io:format("ERROR:Player_Not_Found")
 	end.
 
+find_lobby(PlayerLevel, PlayerMap) ->
+	%casos:
+		%	Nivel N pode entrar em lobbies do tipo:
+		%	{N-1,N+1} : list(Jogadores)
+		%	{N-2,N}	: list(Jogadores) - Atualiza Max-1
+		%	{N,N+2} : list(Jogadores) - Atualiza Min+1
+		%	{N-1,N} : list(Jogadores)
+		% 	{N,N+1} : list(Jogadores)
+	case maps:find({PlayerLevel - 1, PlayerLevel + 1}, PlayerMap) of
+		{ok, PlayerList} -> {ok, PlayerList, {PlayerLevel - 1, PlayerLevel + 1}};
+	error ->
+		case maps:find({PlayerLevel - 2, PlayerLevel}, PlayerMap) of
+			{ok, PlayerList} -> {ok, PlayerList, {PlayerLevel - 2, PlayerLevel-1}};
+		error ->
+			case maps:find({PlayerLevel, PlayerLevel + 2}, PlayerMap) of
+				{ok, PlayerList} -> {ok, PlayerList, {PlayerLevel+1, PlayerLevel + 2}};
+			error ->
+				case maps:find({PlayerLevel - 1, PlayerLevel}, PlayerMap) of
+					{ok, PlayerList} -> {ok, PlayerList, {PlayerLevel - 1, PlayerLevel}};
+				error ->
+					case maps:find({PlayerLevel, PlayerLevel + 1}, PlayerMap) of
+						{ok, PlayerList} -> {ok, PlayerList, {PlayerLevel, PlayerLevel + 1}};
+					error -> error
+					end
+				end
+			end
+		end
+	end.
+
 lobby(PlayerMap)-> %Lobbies de jogadores
-	%PlayerMap = LobbyLevel : list(Jogadores)
+	%PlayerMap = {MinLevel,MaxLevel} : list(Jogadores)
 	receive
-		%Se entrar level 2 e level 3 só pode entrar 2 ou 3
 		{find_Lobby,Username,PlayerLevel,From}->
-			case {maps:find(PlayerLevel, PlayerMap), 
-     			 maps:find(PlayerLevel + 1, PlayerMap), 
-     			 maps:find(PlayerLevel - 1, PlayerMap)} of
-				{ok, PlayerList}	->
-					case length(PlayerList) of
-						%Se tem 2 dá 5seg para entrar até 4 
-                        3 ->
-                            NewPlayerList = lists:append([Username], PlayerList),
-                            lobby(maps:remove(PlayerLevel, NewPlayerList));
-						2 ->
-							NewPlayerList = lists:append([Username], PlayerList),
-							lobby(maps:remove(PlayerLevel, NewPlayerList));
-                        1 ->
-                            NewPlayerList = lists:append([Username], PlayerList),
-							spawn(fun() -> 
-									receive after 5000 -> 
-										match_manager ! {create_match,PlayerList}
-									end
-								end),
-                            lobby(maps:update(PlayerLevel, NewPlayerList, PlayerMap));
-						_ ->
-							From ! {full, ?MODULE},
-							lobby(PlayerMap)
-                    end;
-				_->
-					?MODULE ! {create_lobby,Username,PlayerLevel},
-					lobby(PlayerMap)
-			end;
+		case find_lobby(PlayerLevel, PlayerMap) of
+			{ok, PlayerList, NewLevel} ->
+				case length(PlayerList) of
+					3 ->
+						lobby(maps:update(NewLevel, lists:append([Username], PlayerList), PlayerMap));
+					2 ->
+						lobby(maps:update(NewLevel, lists:append([Username], PlayerList), PlayerMap));
+					1 ->
+						NewPlayerList = lists:append([Username], PlayerList),
+						spawn(fun() -> 
+							receive 
+								after 5000 -> 
+									game ! {startGame, NewPlayerList}
+							end
+						end),
+						UpdatedPlayerMap = maps:update(NewLevel, NewPlayerList, PlayerMap),
+						lobby(UpdatedPlayerMap);
+					_ ->
+						From ! {full, ?MODULE},
+						lobby(PlayerMap)
+				end;
+			error ->
+				From ! {create_lobby, ?MODULE},
+				lobby(PlayerMap)
+		end;
 		{cancel_find,PlayerLevel,RemovedPlayer,From}->
-			case {maps:find(PlayerLevel, PlayerMap), 
-     			maps:find(PlayerLevel + 1, PlayerMap), 
-     			maps:find(PlayerLevel - 1, PlayerMap)} of
-				{ok,PlayerList} ->
+			case find_lobby(PlayerLevel, PlayerMap) of
+			{ok, PlayerList, _} ->
                     case length(PlayerList) of
 						1 ->
                             lobby(maps:remove(PlayerLevel, PlayerMap));
@@ -79,5 +103,5 @@ lobby(PlayerMap)-> %Lobbies de jogadores
 				{receive_level,Nivel}->
 					Nivel
 			end,
-			lobby(maps:put(LobbyLevel,[Username],PlayerMap))
+			lobby(maps:put({LobbyLevel-1,LobbyLevel+1},[Username],PlayerMap))
 	end.

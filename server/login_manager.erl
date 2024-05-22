@@ -9,8 +9,9 @@
 
 startLoginManager() -> 
 	register(?MODULE,spawn(fun() -> loop(#{}) end)).
+
 create_account(Username, Passwd) ->% ok | user_exists.
-	?MODULE ! {create_account,Username,Passwd,self()}, %lança para o loop
+	?MODULE ! {create_account,Username,Passwd,self()},
 	receive
 		{Res,?MODULE} -> Res;
 		{user_exists,?MODULE} -> io:format("ERROR:User_Already_Exists")
@@ -47,7 +48,7 @@ loop(Map) ->
 					loop(Map);
 				false ->
 					From ! {ok,?MODULE},
-					loop(map:put(Username,{Passwd,0},Map))
+					loop(maps:put(Username,{Passwd,0},Map))
 					%Password, 
 					%nivel
 			end;
@@ -56,7 +57,7 @@ loop(Map) ->
 				%{ok,{Pass,_}} when Pass =:= Passwd -> 
 				{ok,{Passwd,_}} ->
 					From ! {ok,?MODULE},
-					loop(map:remove(Username,Map));
+					loop(maps:remove(Username,Map));
 				_ ->
 					From ! {invalid, ?MODULE},
 					loop(Map)
@@ -65,7 +66,7 @@ loop(Map) ->
 			case maps:find(Username,Map) of
 				{ok,{Passwd,Nivel}} ->
 					From ! {ok,?MODULE},
-					loop(map:update(Username,{Passwd,Nivel},Map));
+					loop(maps:update(Username,{Passwd,Nivel},Map));
 				_ ->
 					From ! {invalid, ?MODULE},
 					loop(Map)
@@ -75,7 +76,7 @@ loop(Map) ->
 				%{ok,{Pass,_}} when Pass =:= Passwd -> 
 				{ok,{Passwd,true,On}} ->
 					From ! {ok,?MODULE},
-					loop(map:update(Username,{Passwd,false,On},Map));
+					loop(maps:update(Username,{Passwd,false,On},Map));
 				_ ->
 					From ! {invalid, ?MODULE},
 					loop(Map)

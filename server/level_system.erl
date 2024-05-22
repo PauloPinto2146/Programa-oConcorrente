@@ -4,6 +4,8 @@
 		top10/0,
 		print_top_players/2,
 		map_tolist_level/1,
+		win_game/1,
+		lose_game/1,
 		loop/1]).
 
 %Level 1 - 1 partida ganha
@@ -67,16 +69,16 @@ loop(Map)->
 					loop(Map);
 				false ->
 					From ! {ok,?MODULE},
-					loop(map:put(Username,{1,0,0,0,0},Map))
+					loop(maps:put(Username,{1,0,0,0,0},Map))
 			end;
 		{win_game,Username,From}->
 			case maps:find(Username,Map) of
 				{ok,{Level,WinsPerLevel,Wins,Losses,_}} ->
 					if Wins == Level ->
-						loop(map:update(Username,{Level+1,0,Wins+1,Losses,0},Map));
+						loop(maps:update(Username,{Level+1,0,Wins+1,Losses,0},Map));
 					Wins < Level ->
 						From ! {ok,?MODULE},
-						loop(map:update(Username,{Level,WinsPerLevel+1,Wins+1,Losses,0},Map))
+						loop(maps:update(Username,{Level,WinsPerLevel+1,Wins+1,Losses,0},Map))
 					end;
 				_ ->
 					From ! {invalid, ?MODULE},
@@ -86,10 +88,10 @@ loop(Map)->
 			case maps:find(Username,Map) of
 				{ok,{Level,WinsPerLevel,Wins,Losses,LossesCons}} ->
 					if LossesCons == Level/2 ->
-						loop(map:update(Username,{Level-1,WinsPerLevel,Wins,Losses+1,0},Map));
+						loop(maps:update(Username,{Level-1,WinsPerLevel,Wins,Losses+1,0},Map));
 					LossesCons < Level/2 ->
 						From ! {ok,?MODULE},
-						loop(map:update(Username,{Level,WinsPerLevel,Wins,Losses+1,LossesCons+1},Map))
+						loop(maps:update(Username,{Level,WinsPerLevel,Wins,Losses+1,LossesCons+1},Map))
 				end;
 				_ ->
 					From ! {invalid, ?MODULE},
