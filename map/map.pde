@@ -371,6 +371,9 @@ void keyReleased() {
           break;
         case 3:
           println("Confirm pressed!");
+          println("Socket lançado: " +"00 "+popupUsername + " " + popupPassword);
+          socket.write("00 "+popupUsername + " " + popupPassword);
+          loggedIn = true;
       }
     }
   } else if (activeScreen == "REGISTER_POPUP") {
@@ -391,7 +394,8 @@ void keyReleased() {
         case 4:
           println("Confirm pressed!");
           println("Socket lançado: " +"02 "+popupUsername + " " + popupPassword);
-          socket.write("02");
+          socket.write("02 "+popupUsername + " " + popupPassword);
+          loggedIn = true;
           break;
       }
     }
