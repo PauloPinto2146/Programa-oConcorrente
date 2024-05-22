@@ -42,7 +42,7 @@ String returnText = "Press BACKSPACE to return";
 
 boolean typing = false;
 
-int menuButtonIndex = 1;
+int menuButtonIndex = 2;
 int popupButtonIndex = 1;
 
 color blue = color(66, 135, 245);
@@ -65,8 +65,7 @@ void setup() {
 void draw() {
   background(255);
   if (socket.available() > 0) {
-    System.out.println(socket.readString()); 
-    socket.write("Do crl irmao");
+    System.out.println(socket.readString());
   }
   if (activeScreen == "MENU") {
     drawMenu();
@@ -76,16 +75,11 @@ void draw() {
     drawRegisterPopup();
   } else if (activeScreen == "TUTORIAL_POPUP") {
     drawTutorialPopup();
-  } else if (activeScreen == "GAME"){
+  } else if (activeScreen == "START_GAME"){
     drawGame();
   }
 }
 void drawGame() {
-  if (socket.available() > 0) {
-    System.out.println(socket.readString()); 
-    socket.write("Do crl irmao");
-  }
-  
   background(11, 18, 77);
   
   //estrelas
@@ -145,12 +139,12 @@ void drawMenu() {
 
   // Draw buttons
   if (loggedIn == true){
-    drawButton(buttonX, startY - buttonHeight-buttonSpacing, "Start Game", menuButtonIndex == 5, blue);
+    drawButton(buttonX, startY - buttonHeight-buttonSpacing, "Start Game", menuButtonIndex == 1, blue);
   }
-  drawButton(buttonX, startY, "Login", menuButtonIndex == 1, blue);
-  drawButton(buttonX, startY + buttonHeight + buttonSpacing, "Register", menuButtonIndex == 2, blue);
-  drawButton(buttonX, startY + buttonHeight * 2 + buttonSpacing * 2, "Tutorial", menuButtonIndex == 3, blue);
-  drawButton(buttonX, startY + buttonHeight * 3 + buttonSpacing * 3, "Quit", menuButtonIndex == 4, blue);
+  drawButton(buttonX, startY, "Login", menuButtonIndex == 2, blue);
+  drawButton(buttonX, startY + buttonHeight + buttonSpacing, "Register", menuButtonIndex == 3, blue);
+  drawButton(buttonX, startY + buttonHeight * 2 + buttonSpacing * 2, "Tutorial", menuButtonIndex == 4, blue);
+  drawButton(buttonX, startY + buttonHeight * 3 + buttonSpacing * 3, "Quit", menuButtonIndex == 5, blue);
 }
 
 void drawLoginPopup() {
@@ -242,7 +236,7 @@ void drawTutorialPopup() {
   text("Tutorial", popupX, popupY - 30, popupWidth, 30);
   
   // Draw tutorial text
-  String tutorialText = "Welcome to the Tutorial!\n\nUse AWSD keys to move around.\n\nCollect all the items to win the game.";
+  String tutorialText = "Welcome to the Tutorial!\n\nUse AWSD keys to move around.\n\nBe the last one standing and win the game!.";
   fill(0); // Black color
   textAlign(LEFT, TOP);
   textSize(18);
@@ -293,14 +287,24 @@ void drawTextBox(int x, int y, boolean focused, color boxColor, String text) {
 }
 
 void keyPressed() {
+  if (activeScreen == "START_GAME"){
+    if(keyCode == UP)
+      println("Started game");
+  }
   if (activeScreen == "MENU") {
     if (keyCode == UP || key == 'w') {
-      menuButtonIndex = max(1, menuButtonIndex - 1);
+      if(loggedIn){
+        menuButtonIndex = max(1, menuButtonIndex - 1);
+      }
+      else{
+        menuButtonIndex = max(2, menuButtonIndex - 1);
+      }
       lastFocusTime = millis();
     } else if (keyCode == DOWN || key == 's') {
-      menuButtonIndex = min(4, menuButtonIndex + 1);
+      menuButtonIndex = min(5, menuButtonIndex + 1);
       lastFocusTime = millis();
     }
+    println(menuButtonIndex);
   } else if (activeScreen == "LOGIN_POPUP") {
     if (typing) {
       typing();
@@ -345,15 +349,17 @@ void keyReleased() {
     if (key == ENTER || key == ' ') {
       switch (menuButtonIndex) {
         case 1:
+          activeScreen = "START_GAME";
+        case 2:
           activeScreen = "LOGIN_POPUP";
           break;
-        case 2:
+        case 3:
           activeScreen = "REGISTER_POPUP";
           break;
-        case 3:
+        case 4:
           activeScreen = "TUTORIAL_POPUP";
           break;
-        case 4:
+        case 5:
           exit();
           break;
       }
