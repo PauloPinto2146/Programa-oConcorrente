@@ -16,6 +16,7 @@ float[] starSize = new float[100];
 float numEstrelas = 100;
 
 boolean loggedIn = false;
+String receivedData = ""; 
 
 import processing.net.*;
 
@@ -59,13 +60,15 @@ void setup() {
   buttonX = width / 2 - buttonWidth / 2;
   buttonY = height / 2 - buttonHeight * 2;
   socket = new Client(this, "127.0.0.1", 8080);
+  if (socket.active()) {
+    println("Connected to server");
+  } else {
+    println("Failed to connect to server");
+  }
 }
 
 void draw() {
   background(255);
-  if (socket.available() > 0) {
-    System.out.println(socket.readString());
-  }
   if (activeScreen == "MENU") {
     drawMenu();
   } else if (activeScreen == "LOGIN_POPUP") {
@@ -82,6 +85,10 @@ void draw() {
 }
 void drawGame() {
   background(11, 18, 77);
+  
+  if (socket.available() > 0) {
+    System.out.println(socket.readString());
+  } 
   
   //estrelas
   fill(255, 255, 255);
@@ -394,9 +401,25 @@ void keyReleased() {
           println("Confirm pressed!");
           println("Socket lançado: " +"00 "+popupUsername + " " + popupPassword);
           socket.write("00 "+popupUsername + " " + popupPassword);
-          // VERIFICAÇÃO DE LOGIN
-          loggedIn = true;
-          activeScreen = "LOBBY";
+          // Check for data from the server
+          if (socket.available() > 0) {
+            String data = socket.readString();
+            if (data != null) {
+              receivedData = data.trim();
+              println("Received: " + receivedData);
+              }
+            else{
+              println("Null Socket");
+            }
+          }
+          if (receivedData == "Logged_In"){
+            // VERIFICAÇÃO DE LOGIN
+            loggedIn = true;
+            activeScreen = "LOBBY";
+          }
+          if(receivedData == "Error 00"){
+            activeScreen = "MENU";
+          }
           break;
       }
     }
@@ -422,9 +445,25 @@ void keyReleased() {
           println("Confirm pressed!");
           println("Socket lançado: " +"02 "+popupUsername + " " + popupPassword);
           socket.write("02 "+popupUsername + " " + popupPassword);
-          // VERIFICAÇÃO DE LOGIN
-          loggedIn = true;
-          activeScreen = "LOBBY";
+          if (socket.available() > 0) {
+            String data = socket.readString();
+            if (data != null) {
+              receivedData = data.trim();
+              println("Received: " + receivedData);
+              }
+            else{
+              println("Null Socket");
+            }
+          }
+          if (receivedData == "created_Account"){
+            loggedIn = true;
+            activeScreen = "LOBBY";
+          }
+          if(receivedData == "Error 01"){
+            activeScreen = "MENU";
+            println("Couldn't create account");
+            loggedIn = false;
+          }
           break;
       }
     }
