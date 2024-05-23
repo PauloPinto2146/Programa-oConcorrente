@@ -11,9 +11,10 @@ startLobbyManager() ->
 find_Lobby(Username,Nivel)->
 	?MODULE ! {find_Lobby,Username,Nivel,self()},
 	receive
-		{Res,?MODULE} -> Res;
+		{first_in_lobby,?MODULE} -> {firstInLobby};
+		{startingGame, ?MODULE} -> {startinGame};
 		{full}->
-			io:format("ERROR:Lobby_found_but_full"),
+			{"ERROR:Lobby_found_but_full"},
 			find_Lobby(Username,Nivel)
 	end.
 
@@ -80,7 +81,8 @@ lobby(PlayerMap)-> %Lobbies de jogadores
 						lobby(PlayerMap)
 				end;
 			error ->
-				From ! {create_lobby, ?MODULE},
+				From ! {first_in_lobby, ?MODULE},
+				?MODULE ! {create_lobby, PlayerLevel,Username},
 				lobby(PlayerMap)
 		end;
 		{cancel_find,PlayerLevel,RemovedPlayer,From}->
@@ -97,11 +99,11 @@ lobby(PlayerMap)-> %Lobbies de jogadores
 					From ! {player_not_found,?MODULE},
 					lobby(PlayerMap)
 			end;
-		{create_lobby,LobbyLevel,Username}->
+		{create_lobby,PlayerLevel,Username}->
 			level_system ! {get_level,Username},
 			receive
 				{receive_level,Nivel}->
 					Nivel
 			end,
-			lobby(maps:put({LobbyLevel-1,LobbyLevel+1},[Username],PlayerMap))
+			lobby(maps:put({PlayerLevel-1,PlayerLevel+1},[Username],PlayerMap))
 	end.

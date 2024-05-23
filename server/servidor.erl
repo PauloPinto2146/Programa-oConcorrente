@@ -110,6 +110,7 @@ user(Sock,Mode) ->
 					{ok,created_Account} ->
 						gen_tcp:send(Sock,"created_Account"),
 						io:format("Sent created_Account Sucess\n"),
+						%Cria new_player(Username) automaticamente 
 						user(Sock,1);
 					{"ERROR:User_Already_Exists"} ->
 						gen_tcp:send(Sock,"Error 01"),
@@ -120,10 +121,10 @@ user(Sock,Mode) ->
 	{tcp_closed, _} ->
 		io:format("Utilizador desconectado\n");
 	{tcp_error, _, _} ->
-		io:format("Error\n");
-	{error, Type} -> %Erros de protocolo
-		case Type of 
-			0 ->
-				gen_tcp:send(Sock,"Tipo de erro")
-		end
+		io:format("Error\n")
+	%{error, Type} -> %Erros de protocolo
+	%	case Type of 
+	%		0 ->
+	%			gen_tcp:send(Sock,"Tipo de erro")
+	%	end
 	end.

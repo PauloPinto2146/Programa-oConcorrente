@@ -14,3 +14,7 @@ Socket Protocol
 30 ->
 
 Error Protocol
+
+Error 00 -> Login Failure
+Error 01 -> Create Account Failure
+Error 02 -> Close Account Failure
