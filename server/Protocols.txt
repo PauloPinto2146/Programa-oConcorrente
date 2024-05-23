@@ -1,0 +1,16 @@
+Socket Protocol
+
+00 -> Login
+01 -> Logout
+02 -> Create Account
+03 -> Close Account
+
+10 -> Find Lobby
+11 -> Cancel Find
+
+20 -> Won Game
+21 -> Lost Game
+
+30 ->
+
+Error Protocol

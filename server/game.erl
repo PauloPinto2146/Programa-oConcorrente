@@ -41,9 +41,9 @@ geraValoresPlanetas()->
     Angle3 = (rand:uniform(361) - 1) * math:pi()/180,
     Angle4 = (rand:uniform(361) - 1) * math:pi()/180,
     Velocidade1 = 0.005 + rand:uniform() * (0.04 - 0.005),
-    Velocidade2 = 0.001 + rand:uniform() * (0.02 - 0.001),
+    Velocidade2 = -(0.001 + rand:uniform() * (0.02 - 0.001)),
     Velocidade3 = 0.0008 + rand:uniform() * (0.012 - 0.0008),
-    Velocidade4 = 0.0005 + rand:uniform() * (0.008 - 0.0005),
+    Velocidade4 = -(0.0005 + rand:uniform() * (0.008 - 0.0005)),
     %PosicaoX,PosicaoY,DistanciaDoSol
     Posicao1X = 540+math:cos(Angle1)*120,
     Posicao1Y = 360+math:cos(Angle1)*120,
@@ -63,7 +63,7 @@ geraValoresPlanetas()->
     Planeta4 = {Posicao4X,Posicao4Y,Velocidade4,Angle4,Valor4},
     {Planeta1,Planeta2,Planeta3,Planeta4}.
 
-alteraPosicaoPlayer(Player,{PosicaoX,PosicaoY,Angulo,Velocidade,Aceleracao})->
+alteraPosicaoPlayer(_,{PosicaoX,PosicaoY,Angulo,Velocidade,Aceleracao})->
     %Aceleração ou constante ou 0
     NewVelocidade = Velocidade + Aceleracao / 10 - 0.1, 
     %Em 1 segundo a Velocidade=1 vai para 0 e avança 5.2 unidades no ecra
@@ -102,7 +102,7 @@ loop(PlayersMap,PlanetMap)->
     %PlayerUsername : {PosicaoX,PosicaoY,Angulo,velocidade,aceleração} 
     %aceleração = velocidade_vetorial / alteração_do_tempo
     %Posição dos jogadores no espaço - ecran = 1080, 720
-    %Planeta : PosiçãoX,PosicaoY,Angulo,Velocidade,DistSol
+    %Planeta : PosiçãoX,PosicaoY,Angulo,Velocidade,DistSol,Tamanho
     receive
     after 1000/10 -> %tps = 10
         loop(newPosicaoPlayers(PlayersMap), newPosicaoPlanets(PlanetMap))

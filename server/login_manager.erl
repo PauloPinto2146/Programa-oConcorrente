@@ -13,20 +13,20 @@ startLoginManager() ->
 create_account(Username, Passwd) ->% ok | user_exists.
 	?MODULE ! {create_account,Username,Passwd,self()},
 	receive
-		{Res,?MODULE} -> Res;
-		{user_exists,?MODULE} -> io:format("ERROR:User_Already_Exists")
+		{ok,?MODULE} -> {ok,created_Account};
+		{user_exists,?MODULE} -> {"ERROR:User_Already_Exists"}
 	end.
 close_account(Username, Passwd) -> %ok | invalid.
 	?MODULE ! {create_account,Username,Passwd,self()},
 	receive
-		{Res,?MODULE} -> Res;
-		{invalid, ?MODULE} -> io:format("ERROR:Invalid_Username")
+		{ok,?MODULE} -> {ok,closed_account};
+		{invalid, ?MODULE} -> {"ERROR:Invalid_Username"}
 	end.
 login(Username, Passwd) -> %ok | invalid.
 	?MODULE ! {login,Username,Passwd,self()},
 	receive
-		{Res,?MODULE} -> Res;
-		{invalid, ?MODULE} -> io:format("ERROR:Invalid_Username_for_Login")
+		{ok,?MODULE} -> {ok,login};
+		{invalid, ?MODULE} -> {"ERROR:Invalid_Username_for_Login"}
 	end.
 logout(Username) -> %ok.
 	?MODULE ! {login,Username,self()},

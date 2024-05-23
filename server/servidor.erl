@@ -13,9 +13,13 @@ compile() ->
 
 server() ->
 	compile(),
+	io:format("Compiled\n"),
 	startLoginManager(),
+	io:format("Started Login Manager\n"),
 	startLobbyManager(),
+	io:format("Started Lobby Manager\n"),
 	startLevelSystem(),
+	io:format("Started Level System\n"),
 	{ok, LSock} = gen_tcp:listen(8080, [binary, {active, false}]),
 	spawn(fun()-> acceptor(LSock)end),
 	receive stop -> ok end.
@@ -36,7 +40,7 @@ user(Sock,Mode) ->
 		%O Java processa e lança novamente o Socket da função que quer fazer do Erlang
 		%segundo codigos de protocolo
 		user(Sock,Mode);
-	{tcp, _, Data} when Mode =:= 1 ->
+	{tcp, _, Data} when Mode =:= 2 ->
 		io:format("~p\n",[Data]),
 		case string:split(binary_to_list(Data), " ",all) of
 			["30"] ->
@@ -49,11 +53,20 @@ user(Sock,Mode) ->
 			["01",Username]->%Logout Protocol Code - 01
 				io:format("Recebido Socket 01\n"),
 				logout(Username),
-				user(Sock,1);
+				io:format("~p logged out\n",[Username]),
+				user(Sock,0);
 			["03", Username, Password] -> %Close Account Protocol Code - 03
 				io:format("Recebido Socket 03\n"),
-				close_account(Username,Password),
-				user(Sock,1);
+				case close_account(Username,Password) of
+					{ok,closed_account} ->
+						gen_tcp:send(Sock,"closed_account"),
+						io:format("Sent closed_account Sucess\n"),
+						user(Sock,0);
+					{"ERROR:Invalid_Username"} ->
+						gen_tcp:send(Sock,"Error 02"),
+						io:format("Sent closed_account Failure\n"),
+						user(Sock,1)
+				end;
 			["10", Username, Nivel] -> %Find Lobby Protocol Code - 10
 				io:format("Recebido Socket 10\n"),
 				find_Lobby(Username,Nivel),
@@ -65,10 +78,12 @@ user(Sock,Mode) ->
 			["20",Username] -> %Win game Protocol Code - 20
 			io:format("Recebido Socket 20\n"),
 				win_game(Username),
+				io:format("~p won the game\n",[Username]),
 				user(Sock,1);
 			["21",Username] -> %Lose game Protocol Code - 21
 				io:format("Recebido Socket 21\n"),
 				lose_game(Username),
+				io:format("~p lost the game\n",[Username]),
 				user(Sock,1)
 		end,
 		user(Sock,Mode);
@@ -77,17 +92,33 @@ user(Sock,Mode) ->
 		case string:split(binary_to_list(Data), " ",all) of
 			["00", Username, Password] -> %Login Protocol Code - 00
 				io:format("Recebido Socket 00\n"),
-           		login(Username, Password),
-				user(Sock,1);	
+           		case login(Username, Password) of
+					{ok,login}->
+						gen_tcp:send(Sock,"Logged_In"),
+						io:format("Sent Login Sucess\n"),
+						user(Sock,1);	
+					{"ERROR:Invalid_Username_for_Login"}->
+						gen_tcp:send(Sock,"Error 00"),
+						io:format("Sent Login Failure\n"),
+						user(Sock,0)
+				end;
 			["02", Username, Password] -> %Register Protocol Code - 02
 				io:format("Username:~p\n",[Username]),
 				io:format("Password:~p\n",[Password]),
 				io:format("Recebido Socket 02\n"),
-				create_account(Username,Password),
-				user(Sock,1)
+				case create_account(Username,Password) of
+					{ok,created_Account} ->
+						gen_tcp:send(Sock,"created_Account"),
+						io:format("Sent created_Account Sucess\n"),
+						user(Sock,1);
+					{"ERROR:User_Already_Exists"} ->
+						gen_tcp:send(Sock,"Error 01"),
+						io:format("Sent created_Account Failure\n"),
+						user(Sock,0)
+				end
 		end;
 	{tcp_closed, _} ->
-		io:format("Foi-se\n");
+		io:format("Utilizador desconectado\n");
 	{tcp_error, _, _} ->
 		io:format("Error\n");
 	{error, Type} -> %Erros de protocolo
