@@ -152,9 +152,10 @@ geraValoresPlanetas()->
 alteraPosicaoPlayer(_,{PosicaoX,PosicaoY,Angulo,Velocidade,Aceleracao})->
     %Aceleração ou constante ou 0
     NewVelocidade = Velocidade + Aceleracao / 10 - 0.1, 
+    ForcaGravidade = 0.5,
     %Em 1 segundo a Velocidade=1 vai para 0 e avança 5.2 unidades no ecra
-    NewPosicaoX = PosicaoX + Velocidade * Angulo,
-    NewPosicaoY = PosicaoY + Velocidade * Angulo,
+    NewPosicaoX = PosicaoX + Velocidade * Angulo - ForcaGravidade,
+    NewPosicaoY = PosicaoY + Velocidade * Angulo - ForcaGravidade,
     {NewPosicaoX,NewPosicaoY,Angulo,NewVelocidade,Aceleracao-Aceleracao/10}.
 
 
@@ -174,7 +175,7 @@ alteraPosicaoPlaneta(Planeta,{_,_,Angulo,Velocidade,DistSol})->
     NewAngulo = Angulo+Velocidade,
     {Planeta,{NewPosicaoX,NewPosicaoY,NewAngulo,Velocidade}}.
 
-newPosicaoPlanets(PlanetMap) ->
+newPosicaoPlanetas(PlanetMap) ->
     maps:fold(
         fun(Planeta, {PosicaoX,PosicaoY,Angulo,Velocidade,DistSol}, Acc) ->
             NovaPosicao = 
@@ -193,10 +194,8 @@ loop(PlayersMap,PlanetMap)->
 
     receive
     after 1000/10 -> %tps = 10
-        loop(newPosicaoPlayers(PlayersMap), newPosicaoPlanets(PlanetMap))
+        loop(newPosicaoPlayers(PlayersMap), newPosicaoPlanetas(PlanetMap))
     end.
 
 
-% VALORES INICIAIS FEITOS
 % PRECISAR DE ATUALIZAR RECEBENDO SOCKETS DE POSIÇÕES
-% ATUALIZAR CONSTANTEMENTE PLAYERS COM GRAVIDADE

@@ -2,7 +2,7 @@
 -export([server/0,user/2]).
 -import(login_manager, [startLoginManager/0,logout/1,login/2,create_account/2,
 		close_account/2]).
--import(lobby_manager, [startLobbyManager/0,find_Lobby/2,cancel_find/2]).
+-import(lobby_manager, [startLobbyManager/0,find_Lobby/3,cancel_find/2]).
 -import(level_system, [startLevelSystem/0,win_game/1,lose_game/1,
 		print_top_players/2]).
 -import(game, [startGame/0]).
@@ -67,10 +67,27 @@ user(Sock,Mode) ->
 						io:format("Sent closed_account Failure\n"),
 						user(Sock,1)
 				end;
-			["10", Username, Nivel] -> %Find Lobby Protocol Code - 10
-				io:format("Recebido Socket 10\n"),
-				find_Lobby(Username,Nivel),
-				user(Sock,1);
+			["10", Username] -> %Find Lobby Protocol Code - 10
+				level_system ! {get_level, Username,?MODULE},
+				receive
+					{receive_level,Level,_} ->
+						Level
+				end,
+				io:format("Recebido Socket 10 (find_lobby)\n"),
+				case find_Lobby(Username,Level,Sock) of
+					{firstInLobby,Sock}->
+						gen_tcp:send(Sock,"firstInLobby"),
+						io:format("~p is first in lobby\n",[Username]),
+						user(Sock,1);
+					{startinGame}->
+						gen_tcp:send(Sock,"startinGame"),
+						io:format("Starting a new game\n"),
+						user(Sock,1);
+					{"ERROR:Lobby_found_but_full"}->
+						gen_tcp:send(Sock,"ERROR:Lobby_found_but_full"),
+						io:format("~p found a full lobby\n",[Username]),
+						user(Sock,1)
+				end;
 			["11", LobbyLevel,Player]-> %Cancel Finding Lobby Protocol Code - 11
 				io:format("Recebido Socket 11\n"),
 				cancel_find(LobbyLevel,Player),
