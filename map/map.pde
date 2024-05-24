@@ -16,6 +16,7 @@ float[] starSize = new float[100];
 float numEstrelas = 100;
 
 boolean loggedIn = false;
+boolean waitingForLobby = false;
 String receivedData = ""; 
 
 import processing.net.*;
@@ -472,6 +473,27 @@ void keyReleased() {
       switch (menuButtonIndex) {
         case 1:
           activeScreen = "START_GAME";
+          socket.write("10"+ " "+ popupUsername);
+          if (socket.available() > 0) {
+            String data = socket.readString();
+            if (data != null) {
+              receivedData = data.trim();
+              println("Received: " + receivedData);
+              }
+            else{
+              println("Null Socket");
+            }
+          }
+          if (receivedData == "firstInLobby"){
+            waitingForLobby = true;
+            //Adicionar ecrã de espera
+            //No ecrã de espera receber socket "stopWaiting" que informa ao jogador que a partida está a começar e coloca activeScreen a START_GAME
+            //Tem opção de cancelar a procura de partida, mas mal receba socket que está disponível um jogo não pode mais cancelar
+          }
+          if (receivedData == "startinGame"){
+            activeScreen = "START_GAME";
+            //Entra diretamente no jogo se este estiver disponivel
+          }
           break;
         case 2:
           activeScreen = "TUTORIAL_POPUP";
