@@ -3,7 +3,7 @@
 -import(login_manager, [startLoginManager/0,logout/1,login/2,create_account/2,
 		close_account/2]).
 -import(lobby_manager, [startLobbyManager/0,find_Lobby/3,cancel_find/2]).
--import(level_system, [startLevelSystem/0,win_game/1,lose_game/1,
+-import(level_system, [startLevelSystem/0,win_game/1,lose_game/1,get_level/1,
 		print_top_players/2]).
 -import(game, [startGame/0]).
 
@@ -41,20 +41,35 @@ user(Sock,Mode) ->
 		%segundo codigos de protocolo
 		user(Sock,Mode);
 	{tcp, _, Data} when Mode =:= 2 ->
+		%Quando está a jogar
 		io:format("~p\n",[Data]),
 		case string:split(binary_to_list(Data), " ",all) of
-			["30"] ->
-				"30"
+			["30",Username] -> %Purpulsor da esquerda
+				Username;
+			["31",Username] -> %Purpulsor da direita
+				Username;
+			["33", Username] -> %Purpulsor linear
+				Username
 		end;
 	{tcp, _, Data} when Mode =:= 1 ->
 		io:format("~p\n",[Data]),
 		case string:split(binary_to_list(Data), " ",all) of
 			%Quando está Logged in	
+			["02", _, _] -> %Register Protocol Code - 02
+				io:format("Sent Account Failure"),
+				gen_tcp:send(Sock,"Error 01");
 			["01",Username]->%Logout Protocol Code - 01
 				io:format("Recebido Socket 01\n"),
-				logout(Username),
-				io:format("~p logged out\n",[Username]),
-				user(Sock,0);
+				case logout(Username) of
+					{ok,_}->
+						gen_tcp:send(Sock,"logged out sucessfully"),
+						io:format("~p logged out\n",[Username]),
+						user(Sock,0);
+					{"invalid_Username",_}->
+						gen_tcp:send(Sock,"ERROR:Invalid_Username"),
+						io:format("Invalid Username"),
+						user(Sock,0)
+				end;
 			["03", Username, Password] -> %Close Account Protocol Code - 03
 				io:format("Recebido Socket 03\n"),
 				case close_account(Username,Password) of
@@ -68,24 +83,27 @@ user(Sock,Mode) ->
 						user(Sock,1)
 				end;
 			["10", Username] -> %Find Lobby Protocol Code - 10
-				level_system ! {get_level, Username,?MODULE},
-				receive
-					{receive_level,Level,_} ->
-						Level
-				end,
-				io:format("Recebido Socket 10 (find_lobby)\n"),
-				case find_Lobby(Username,Level,Sock) of
-					{firstInLobby,Sock}->
-						gen_tcp:send(Sock,"firstInLobby"),
-						io:format("~p is first in lobby\n",[Username]),
-						user(Sock,1);
-					{startinGame}->
-						gen_tcp:send(Sock,"startinGame"),
-						io:format("Starting a new game\n"),
-						user(Sock,1);
-					{"ERROR:Lobby_found_but_full"}->
-						gen_tcp:send(Sock,"ERROR:Lobby_found_but_full"),
-						io:format("~p found a full lobby\n",[Username]),
+				case get_level(Username) of
+					{Username,Level} ->
+						PlayerLevel = Level,
+						io:format("Recebido Socket 10 (find_lobby)\n"),
+						case find_Lobby(Username,PlayerLevel,Sock) of
+							{firstInLobby,Sock}->
+								gen_tcp:send(Sock,"firstInLobby"),
+								io:format("~p is first in lobby\n",[Username]),
+								user(Sock,1);
+							{startinGame}->
+								gen_tcp:send(Sock,"startinGame"),
+								io:format("Starting a new game\n"),
+								user(Sock,1);
+							{"ERROR:Lobby_found_but_full"}->
+								gen_tcp:send(Sock,"ERROR:Lobby_found_but_full"),
+								io:format("~p found a full lobby\n",[Username]),
+								user(Sock,1)
+						end;
+					{Username,error} ->
+						gen_tcp:send(Sock,"Error 00"),
+						io:format("ERROR\n"),
 						user(Sock,1)
 				end;
 			["11", LobbyLevel,Player]-> %Cancel Finding Lobby Protocol Code - 11
@@ -108,13 +126,18 @@ user(Sock,Mode) ->
 		io:format("~p\n",[Data]),
 		case string:split(binary_to_list(Data), " ",all) of
 			["00", Username, Password] -> %Login Protocol Code - 00
-				io:format("Recebido Socket 00\n"),
-           		case login(Username, Password) of
-					{ok,login}->
-						gen_tcp:send(Sock,"Logged_In"),
-						io:format("Sent Login Sucess\n"),
-						user(Sock,1);	
-					{"ERROR:Invalid_Username_for_Login"}->
+				case get_level(Username) of
+					{Username,Level} ->
+						Level,
+						io:format("Recebido Socket 00\n"),
+						case login(Username, Password) of
+							{ok,login}->
+								Str = io_lib:format("Logged_in, ~p", [Level]),
+								gen_tcp:send(Sock,Str),
+								io:format("Sent Login Sucess\n"),
+								user(Sock,1)
+						end;
+					{Username,error} ->
 						gen_tcp:send(Sock,"Error 00"),
 						io:format("Sent Login Failure\n"),
 						user(Sock,0)

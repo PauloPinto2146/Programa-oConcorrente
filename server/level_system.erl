@@ -6,6 +6,7 @@
 		map_tolist_level/1,
 		win_game/1,
 		lose_game/1,
+		get_level/1,
 		loop/1]).
 
 %Level 1 - 1 partida ganha
@@ -53,6 +54,20 @@ print_top_players([{Player, Nivel,_,_,_} | Tail], Count) ->
 
 map_tolist_level(PlayerMap)->
 	maps:fold(fun(Username, {Nivel, _, _, _}, Acc) -> maps:put(Username, Nivel, Acc) end, #{}, PlayerMap).
+
+get_level(Username)->
+	?MODULE ! {get_map,self()},
+	receive
+		{receive_map,Map}->
+			PlayerMap = Map
+	end,
+	case maps:find(Username,PlayerMap) of
+		{ok,{Level,_,_,_,_}} ->
+			{Username,Level};
+		error ->
+			{Username,error}
+	end.
+
 
 loop(Map)->
 	%Username
@@ -103,8 +118,8 @@ loop(Map)->
 			SortedPlayers = lists:keysort(2,List),
     		print_top_players(SortedPlayers, 10),
     		loop(Map);
-    	{get_level,Username,From}->
-    		Level = maps:get(Username,Map),
-    		From ! {receive_level,Level,self()}
+    	{get_map,From}->
+			From ! {receive_map,Map},
+			loop(Map)
 	end.
 

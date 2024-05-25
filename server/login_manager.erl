@@ -4,7 +4,6 @@
 		close_account/2,
 		login/2,
 		logout/1,
-		online/0,
 		loop/1]).
 
 startLoginManager() -> 
@@ -14,7 +13,7 @@ create_account(Username, Passwd) ->% ok | user_exists.
 	?MODULE ! {create_account,Username,Passwd,self()},
 	receive
 		{ok,?MODULE} -> {ok,created_Account};
-		{user_exists,?MODULE} -> {"ERROR:User_Already_Exists"}
+		{user_exists,_} -> {"ERROR:User_Already_Exists"}
 	end.
 close_account(Username, Passwd) -> %ok | invalid.
 	?MODULE ! {create_account,Username,Passwd,self()},
@@ -29,14 +28,13 @@ login(Username, Passwd) -> %ok | invalid.
 		{invalid, ?MODULE} -> {"ERROR:Invalid_Username_for_Login"}
 	end.
 logout(Username) -> %ok.
-	?MODULE ! {login,Username,self()},
+	?MODULE ! {logout,Username,self()},
 	receive
-		{Res,?MODULE} -> Res end.
-
-online() -> %[Username].
-	?MODULE ! {online,self()},
-	receive
-		{Res,?MODULE} -> Res end.
+		{ok,_} -> 
+			{ok,logout};
+		{invalid_Username,_} -> 
+			{"invalid_Username"}
+	end.
 
 loop(Map) ->
 	receive 
@@ -44,10 +42,10 @@ loop(Map) ->
 			case maps:is_key(Username,Map) of
 				true ->
 					From ! {user_exists,?MODULE},
-					level_system ! {create_account,Username,Passwd},
 					loop(Map);
 				false ->
 					From ! {ok,?MODULE},
+					level_system ! {new_player,Username,?MODULE},
 					loop(maps:put(Username,{Passwd,0},Map))
 					%Password, 
 					%nivel
@@ -73,20 +71,11 @@ loop(Map) ->
 			end;
 		{logout,Username,From}->
 			case maps:find(Username,Map) of
-				%{ok,{Pass,_}} when Pass =:= Passwd -> 
-				{ok,{Passwd,true,On}} ->
+				{ok,{_,_}} ->
 					From ! {ok,?MODULE},
-					loop(maps:update(Username,{Passwd,false,On},Map));
+					loop(Map);
 				_ ->
-					From ! {invalid, ?MODULE},
+					From ! {invalid_Username, ?MODULE},
 					loop(Map)
-			end;
-		{online, From} ->
-				Fun = fun(Username,{_,true,_,_,_,_},Acc) -> 
-					[Username|Acc]; 
-					(_,_,Acc) -> Acc end,
-                Users = maps:fold(Fun,{},Map),
-                % ou apenas [User || {User,{_,true}} <- maps:to_list(Map)]
-				From ! {Users,?MODULE},
-			    loop(Map)
+			end
 	end.
