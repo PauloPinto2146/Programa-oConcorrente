@@ -9,6 +9,8 @@ float velocidade1,velocidade2,velocidade3, velocidade4;
 float x1,x2,x3,x4;
 float y1,y2,y3,y4;
 
+int curr_level;
+
 float[] starX = new float[100];
 float[] starY = new float[100];
 float[] starSize = new float[100];
@@ -220,7 +222,11 @@ void drawRegisterPopup() {
 }
 
 void drawLobby(){
-  // Draw title
+  //nivel do jogador
+  textSize(16);
+  fill(0); // Preto
+  text(popupUsername + " - Nível: " + curr_level, 50, 40);
+  //titulo
   textAlign(CENTER, CENTER); // Center align the title
   textSize(titleSize);
   fill(66, 135, 245); // Blue color
@@ -402,7 +408,7 @@ void keyReleased() {
           println("Confirm pressed!");
           println("Socket lançado: " +"00 "+popupUsername + " " + popupPassword);
           socket.write("00 "+popupUsername + " " + popupPassword);
-          // Check for data from the server
+          delay(30);
           if (socket.available() > 0) {
             String data = socket.readString();
             if (data != null) {
@@ -413,12 +419,19 @@ void keyReleased() {
               println("Null Socket");
             }
           }
-          if (receivedData == "Logged_In"){
-            // VERIFICAÇÃO DE LOGIN
-            loggedIn = true;
-            activeScreen = "LOBBY";
+          if (receivedData.startsWith("Logged_in,")) {
+            String[] parts = receivedData.split(", ");
+            if (parts.length == 2) {
+            try {
+              curr_level = Integer.parseInt(parts[1]);
+              loggedIn = true;
+              activeScreen = "LOBBY";
+            } catch (NumberFormatException e) {
+              println("Erro ao converter o nível: " + e.getMessage());
+              }
+            }
           }
-          if(receivedData == "Error 00"){
+          if(receivedData.equals("Error 00")){
             activeScreen = "MENU";
           }
           break;
@@ -446,6 +459,7 @@ void keyReleased() {
           println("Confirm pressed!");
           println("Socket lançado: " +"02 "+popupUsername + " " + popupPassword);
           socket.write("02 "+popupUsername + " " + popupPassword);
+          delay(30);
           if (socket.available() > 0) {
             String data = socket.readString();
             if (data != null) {
@@ -456,11 +470,13 @@ void keyReleased() {
               println("Null Socket");
             }
           }
-          if (receivedData == "created_Account"){
+          println(receivedData);
+          if (receivedData.equals("created_Account")){
             loggedIn = true;
+            println("DEI REGISTER");
             activeScreen = "LOBBY";
           }
-          if(receivedData == "Error 01"){
+          if(receivedData.equals("Error 01")){
             activeScreen = "MENU";
             println("Couldn't create account");
             loggedIn = false;
@@ -499,10 +515,27 @@ void keyReleased() {
           activeScreen = "TUTORIAL_POPUP";
           break;
         case 3:
-          popupUsername = "Username";
-          popupPassword = "Password";
-          confirmPassword = "Confirm Password";
-          activeScreen = "MENU";
+          socket.write("01 " + popupUsername);
+          delay(30);
+          if(socket.available()>0){
+            String data = socket.readString();
+            if (data != null) {
+              receivedData = data.trim();
+              println("Received: " + receivedData);
+              }
+            else{
+              println("Null Socket");
+            }
+          }
+          if(receivedData.equals("logged out sucessfully")){
+            popupUsername = "Username";
+            popupPassword = "Password";
+            confirmPassword = "Confirm Password";
+            activeScreen = "MENU";
+          }
+          if(receivedData.equals("ERROR:Invalid_Username")){
+            activeScreen = "LOBBY";
+          }
           break;
       }
     }
