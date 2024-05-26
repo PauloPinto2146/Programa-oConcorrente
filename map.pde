@@ -397,6 +397,26 @@ void drawLoadingScreen() {
   popMatrix();
 
   angle += 0.02;
+  if (socket.available() > 0) {
+     String data = socket.readString();
+     if (data != null) {
+     receivedData = data.trim();
+     println("Received: " + receivedData);
+     }
+     else{
+        println("Null Socket");
+     }
+  }
+  if (receivedData.equals("firstInLobby")) {
+    //PEDRO
+  }
+  if (receivedData.equals("startingGame")) {
+    
+  }
+  if(receivedData.equals("Error 00")){
+     errorText = "This account doesn't exist";
+     activeScreen = "ERROR_POPUP";
+  }
 }
 
 // Draw button function
@@ -601,6 +621,7 @@ void keyReleased() {
             }
             println(receivedData);
             if (receivedData.equals("created_Account")){
+              curr_level = 1;
               loggedIn = true;
               println("DEI REGISTER");
               activeScreen = "LOBBY";
@@ -637,7 +658,7 @@ void keyReleased() {
             //No ecrã de espera receber socket "stopWaiting" que informa ao jogador que a partida está a começar e coloca activeScreen a START_GAME
             //Tem opção de cancelar a procura de partida, mas mal receba socket que está disponível um jogo não pode mais cancelar
           }
-          if (receivedData.equals("startinGame")){
+          if (receivedData.equals("startingGame")){
             activeScreen = "LOADING";
             //Entra diretamente no jogo se este estiver disponivel
           }
@@ -680,8 +701,8 @@ void keyReleased() {
       }
     }
   }else if (activeScreen == "LOADING") {
-    if (key == BACKSPACE || key == ' ') {
-      println("Socket lançado: " +"11 " + curr_level + " " + popupUsername);
+    if (key == ENTER || key == ' ') {
+          println("Socket lançado: " +"11 " + curr_level + " " + popupUsername);
           socket.write("11 "+ curr_level + " " + popupUsername);
           delay(30);
           if (socket.available() > 0) {
