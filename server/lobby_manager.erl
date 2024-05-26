@@ -1,7 +1,8 @@
 -module(lobby_manager).
 -export([startLobbyManager/0,
 		find_Lobby/3,
-		cancel_find/2]).
+		cancel_find/2,
+		start_game/1]).
 
 startLobbyManager() -> 
 	register(?MODULE,spawn(fun() -> lobby(#{}) end)). 
@@ -10,9 +11,12 @@ startLobbyManager() ->
 
 find_Lobby(Username,Nivel,Socket)->
 	?MODULE ! {find_Lobby,Username,Nivel,Socket,self()},
+	io:format("EXECUTADO FIND_LOBBY\n"),
 	receive
-		{first_in_lobby,?MODULE} -> {firstInLobby,Socket};
-		{startingGame, ?MODULE} -> {startinGame};
+		{first_in_lobby,?MODULE} -> 
+			{firstInLobby,Socket};
+		{startingGame,?MODULE}->
+			{startingGame,Socket};
 		{full}->
 			{"ERROR:Lobby_found_but_full"},
 			find_Lobby(Username,Nivel,Socket)
@@ -22,11 +26,13 @@ cancel_find(LobbyLevel,Player)->
 	?MODULE ! {remove_player,LobbyLevel,Player,self()},
 	receive
 		{cancel_find} -> cancel_find;
+		{startingGame, ?MODULE}->
+			startingGame;
 		{player_not_found}->
 			"ERROR:Player_Not_Found"
 	end.
 
-find_Room(PlayerLevel, PlayerMap) ->
+find_Room(PlayerLevel, LobbyMap) ->
 	%casos:
 		%	Nivel N pode entrar em lobbies do tipo:
 		%	{N-1,N+1} : list(Jogadores)
@@ -34,92 +40,114 @@ find_Room(PlayerLevel, PlayerMap) ->
 		%	{N,N+2} : list(Jogadores) - Atualiza Min+1
 		%	{N-1,N} : list(Jogadores)
 		% 	{N,N+1} : list(Jogadores)
-	case maps:find({PlayerLevel - 1, PlayerLevel + 1}, PlayerMap) of
-		{ok, {PlayerList,SocketPrimeiroJogador}} -> 
-			{ok, {PlayerList,SocketPrimeiroJogador}, {PlayerLevel - 1, PlayerLevel + 1}};
+	case maps:find({PlayerLevel - 1, PlayerLevel + 1}, LobbyMap) of
+		{ok, PlayerMap} -> 
+			{ok, PlayerMap, {PlayerLevel - 1, PlayerLevel + 1}};
 		error ->
-			case maps:find({PlayerLevel - 2, PlayerLevel}, PlayerMap) of
-				{ok, {PlayerList,SocketPrimeiroJogador}} -> 
-					{ok,{PlayerList,SocketPrimeiroJogador}, {PlayerLevel - 2, PlayerLevel-1}};
+			case maps:find({PlayerLevel - 2, PlayerLevel}, LobbyMap) of
+				{ok, PlayerMap} -> 
+					{ok,PlayerMap, {PlayerLevel - 2, PlayerLevel-1}};
 				error ->
-					case maps:find({PlayerLevel, PlayerLevel + 2}, PlayerMap) of
-						{ok, {PlayerList,SocketPrimeiroJogador}} -> 
-							{ok, {PlayerList,SocketPrimeiroJogador}, {PlayerLevel+1, PlayerLevel + 2}};
+					case maps:find({PlayerLevel, PlayerLevel + 2}, LobbyMap) of
+						{ok, PlayerMap} -> 
+							{ok, PlayerMap, {PlayerLevel+1, PlayerLevel + 2}};
 						error ->
-							case maps:find({PlayerLevel - 1, PlayerLevel}, PlayerMap) of
-								{ok, {PlayerList,SocketPrimeiroJogador}} -> 
-									{ok, {PlayerList,SocketPrimeiroJogador}, {PlayerLevel - 1, PlayerLevel}};
+							case maps:find({PlayerLevel - 1, PlayerLevel}, LobbyMap) of
+								{ok, PlayerMap} -> 
+									{ok, PlayerMap, {PlayerLevel - 1, PlayerLevel}};
 								error ->
-									case maps:find({PlayerLevel, PlayerLevel + 1}, PlayerMap) of
-										{ok, {PlayerList,SocketPrimeiroJogador}} -> 
-											{ok, {PlayerList,SocketPrimeiroJogador}, {PlayerLevel, PlayerLevel + 1}};
+									case maps:find({PlayerLevel, PlayerLevel + 1}, LobbyMap) of
+										{ok, PlayerMap} -> 
+											{ok, PlayerMap, {PlayerLevel, PlayerLevel + 1}};
 										error -> error
+									end
+							end
 					end
-				end
 			end
-		end
 	end.
 
-find_key_by_value(PlayerMap, PlayerList) ->
-	{Key, _} = lists:keyfind(PlayerList, 2, maps:to_list(PlayerMap)),
-	Key.
+%find_key_by_value(Map, Value) ->
+%	lists:foldl(fun({Key, Val}, Acc) ->
+%						case Val =:= Value of
+%							true -> Key;
+%							false -> Acc
+%						end
+%				end, not_found, maps:to_list(Map)).
 
-lobby(PlayerMap)-> %Lobbies de jogadores
-	%PlayerMap = {MinLevel,MaxLevel} : {list(Jogadores),SocketPrimeiroJogador}
+start_game(PlayerMap) ->
+	Sockets = maps:values(PlayerMap),
+	lists:foreach(fun(Socket) -> gen_tcp:send(Socket,"game_started") end, Sockets),
+	game ! {startGame, PlayerMap},
+	io:format("Starting game with players: ~p~n", [maps:keys(PlayerMap)]).
+
+lobby(LobbyMap)-> %Lobbies de jogadores
+	%LobbyMap = {MinLevel,MaxLevel} : {Jogador1:Socket1,Jogador2:Socket2,Jogador3:Socket3,Jogador4:Socket4}
 	receive
-		{find_Lobby,Username,PlayerLevel,SocketPrimeiroJogador,From}->
-		case find_Room(PlayerLevel, PlayerMap) of
-			{ok, {PlayerList,SocketPrimeiroJogador}, NewLevel} ->
-				case length(PlayerList) of
-					3 ->
-						lobby(maps:update(NewLevel, lists:append([Username], PlayerList), PlayerMap));
-					2 ->
-						lobby(maps:update(NewLevel, lists:append([Username], PlayerList), PlayerMap));
-					1 ->
-						lobby(maps:update(NewLevel, lists:append([Username], PlayerList), PlayerMap)),
-						gen_tcp:send(SocketPrimeiroJogador,"stopWaiting"),
-						spawn(fun() -> 
-							receive 
-								after 5000 -> 
-									{NewPlayerList,SocketPrimeiroJogador} = maps:get(NewLevel,PlayerMap),
-									game ! {startGame, NewPlayerList},
-									?MODULE ! {remove_lobby, NewPlayerList}
-							end
-						end);
-					_ ->
-						From ! {full, ?MODULE},
-						lobby(PlayerMap)
-				end;
-			error ->
-				From ! {first_in_lobby, ?MODULE},
-				?MODULE ! {create_lobby, PlayerLevel,Username,SocketPrimeiroJogador},
-				lobby(PlayerMap)
+		{find_Lobby,Username,PlayerLevel,Socket,From}->
+		case find_Room(PlayerLevel, LobbyMap) of
+			{ok, PlayerMap, NewLevel} ->
+				NewPlayerMap = maps:put(Username, Socket, PlayerMap),
+                    case length(maps:values(NewPlayerMap)) of
+                        4 ->
+                            From ! {startingGame,?MODULE},
+                            start_game(NewPlayerMap),
+                            lobby(maps:remove(NewLevel, LobbyMap));
+                        3 ->
+                            erlang:send_after(5000, ?MODULE, {check_lobby_timeout, NewLevel, 3}),
+                            lobby(maps:update(NewLevel, NewPlayerMap , LobbyMap));
+                        2 ->
+                            erlang:send_after(5000, ?MODULE, {check_lobby_timeout, NewLevel, 2}),
+                            lobby(maps:update(NewLevel, NewPlayerMap, LobbyMap));
+                        _ ->
+                            lobby(maps:update(NewLevel, NewPlayerMap, LobbyMap))
+                    end;
+            error ->
+                From ! {first_in_lobby, ?MODULE},
+                ?MODULE ! {create_lobby, PlayerLevel, Username, Socket},
+                lobby(LobbyMap)
 		end;
 		{cancel_find,PlayerLevel,RemovedPlayer,From}->
-			case find_Room(PlayerLevel, PlayerMap) of
-			{ok, PlayerList, From} ->
-                    case length(PlayerList) of
+			case find_Room(PlayerLevel, LobbyMap) of
+			{ok, PlayerMap, From} ->
+                    case length(PlayerMap) of
 						1 ->
-                            lobby(maps:remove(PlayerLevel, PlayerMap)),
-							From ! {canceled_find};
+							From ! {canceled_find},
+                            lobby(maps:remove(PlayerLevel, LobbyMap));
                         _ ->
-                            NewPlayerList = lists:delete(RemovedPlayer, PlayerList),
-                            lobby(maps:update(PlayerLevel, NewPlayerList, PlayerMap)),
-							From ! {canceled_find}
+							From ! {canceled_find},
+                            NewPlayerList = lists:delete(RemovedPlayer, PlayerMap),
+                            lobby(maps:update(PlayerLevel, NewPlayerList, LobbyMap))
                     end;
 				_ ->
 					From ! {player_not_found,?MODULE},
-					lobby(PlayerMap)
+					lobby(LobbyMap)
 			end;
-		{create_lobby,PlayerLevel,Username,SocketPrimeiroJogador}->
+		{create_lobby,PlayerLevel,Username,Socket}->
 			level_system ! {get_level,Username},
 			receive
 				{receive_level,Nivel}->
 					Nivel
 			end,
-			lobby(maps:put({PlayerLevel-1,PlayerLevel+1},{[Username],SocketPrimeiroJogador},PlayerMap));
-		{remove_lobby, NewPlayerList}->
-			LobbyLevel = find_key_by_value(PlayerMap, NewPlayerList),
-			NewPlayerMap = maps:remove(LobbyLevel, PlayerMap),
-			lobby(NewPlayerMap)
+			NewMap = #{},
+			maps:put(Username,Socket,NewMap),
+			lobby(maps:put({PlayerLevel-1,PlayerLevel+1},NewMap,LobbyMap));
+		%{remove_lobby, OldPlayerMap}->
+		%	LobbyLevel = find_key_by_value(OldPlayerMap,LobbyMap),
+		%	NewPlayerMap = maps:remove(LobbyLevel, LobbyMap),
+		%	lobby(NewPlayerMap);
+		{check_lobby_timeout, Level,Number} ->
+			%Se for igual o numero de jogadores lança startgame, senão
+            case maps:find(Level, LobbyMap) of
+				{ok,NewPlayerMap}->
+					case length(NewPlayerMap) of
+						Number ->
+							?MODULE ! {startingGame, ?MODULE},
+							start_game(NewPlayerMap),
+							lobby(NewPlayerMap);
+						_ ->
+							lobby(NewPlayerMap)
+					end;
+            	error ->
+                    lobby(LobbyMap)
+            end
 	end.

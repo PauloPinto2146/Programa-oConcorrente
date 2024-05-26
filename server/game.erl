@@ -11,15 +11,19 @@ generate_unique_positions/5,
 retirar_primeiro/1,
 get_first/1]).
 
-retirar_primeiro([_ | Tail]) ->
-    Tail.
+retirar_primeiro(Map) ->
+    List = maps:to_list(Map),
+    [First | _] = List,
+    {Key, _Value} = First,
+    NewMap = maps:remove(Key, Map),
+    NewMap.
 
 get_first([H|_]) ->
     H.
 
 startGame() -> 
     receive
-        {startGame, PlayerList} when length(PlayerList) =:= 2 ->
+        {startGame, PlayerMap} when length(PlayerMap) =:= 2 ->
             {Planeta1,Planeta2,Planeta3,Planeta4} = geraValoresPlanetas(),
             PlanetasMap = #{},
             maps:put(1, Planeta1, PlanetasMap),  
@@ -28,11 +32,11 @@ startGame() ->
             maps:put(4, Planeta4, PlanetasMap),
             {Player1,Player2,_,_} = geraValoresPlayers(),
             PlayersMap = #{},
-            maps:put(get_first(PlayerList), Player1, PlanetasMap),  
-            PlayerList2 = retirar_primeiro(PlayerList),
-            maps:put(get_first(PlayerList2), Player2, PlanetasMap),
+            maps:put(get_first(PlayerMap), Player1, PlanetasMap),  
+            PlayerMap2 = retirar_primeiro(PlayerMap),
+            maps:put(get_first(PlayerMap2), Player2, PlanetasMap),
 	        register(?MODULE,spawn(fun() -> loop(PlayersMap,PlanetasMap) end));
-        {startGame, PlayerList} when length(PlayerList) =:= 3 ->
+        {startGame, PlayerMap} when length(PlayerMap) =:= 3 ->
             {Planeta1,Planeta2,Planeta3,Planeta4} = geraValoresPlanetas(),
             PlanetasMap = #{},
             maps:put(1, Planeta1, PlanetasMap),  
@@ -41,13 +45,13 @@ startGame() ->
             maps:put(4, Planeta4, PlanetasMap),
             {Player1,Player2,Player3,_} = geraValoresPlayers(),
             PlayersMap = #{},
-            maps:put(get_first(PlayerList), Player1, PlanetasMap),  
-            PlayerList2 = retirar_primeiro(PlayerList),
-            maps:put(get_first(PlayerList2), Player2, PlanetasMap),
-            PlayerList3 = retirar_primeiro(PlayerList2),
-            maps:put(get_first(PlayerList3), Player3, PlanetasMap),
+            maps:put(get_first(PlayerMap), Player1, PlanetasMap),  
+            PlayerMap2 = retirar_primeiro(PlayerMap),
+            maps:put(get_first(PlayerMap2), Player2, PlanetasMap),
+            PlayerMap3 = retirar_primeiro(PlayerMap2),
+            maps:put(get_first(PlayerMap3), Player3, PlanetasMap),
 	        register(?MODULE,spawn(fun() -> loop(PlayersMap,PlanetasMap) end));
-        {startGame, PlayerList} when length(PlayerList) =:= 4 ->
+        {startGame, PlayerMap} when length(PlayerMap) =:= 4 ->
             {Planeta1,Planeta2,Planeta3,Planeta4} = geraValoresPlanetas(),
             PlanetasMap = #{},
             maps:put(1, Planeta1, PlanetasMap),  
@@ -56,13 +60,13 @@ startGame() ->
             maps:put(4, Planeta4, PlanetasMap),    
             {Player1,Player2,Player3,Player4} = geraValoresPlayers(),
             PlayersMap = #{},
-            maps:put(get_first(PlayerList), Player1, PlanetasMap),  
-            PlayerList2 = retirar_primeiro(PlayerList),
-            maps:put(get_first(PlayerList2), Player2, PlanetasMap),
-            PlayerList3 = retirar_primeiro(PlayerList2),
-            maps:put(get_first(PlayerList3), Player3, PlanetasMap),
-            PlayerList4 = retirar_primeiro(PlayerList3),
-            maps:put(get_first(PlayerList4), Player4, PlanetasMap),
+            maps:put(get_first(PlayerMap), Player1, PlanetasMap),  
+            PlayerMap2 = retirar_primeiro(PlayerMap),
+            maps:put(get_first(PlayerMap2), Player2, PlanetasMap),
+            PlayerMap3 = retirar_primeiro(PlayerMap2),
+            maps:put(get_first(PlayerMap3), Player3, PlanetasMap),
+            PlayerMap4 = retirar_primeiro(PlayerMap2),
+            maps:put(get_first(PlayerMap4), Player4, PlanetasMap),
 	        register(?MODULE,spawn(fun() -> loop(PlayersMap,PlanetasMap) end))
     end.
 

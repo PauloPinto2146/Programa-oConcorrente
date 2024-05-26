@@ -91,14 +91,14 @@ user(Sock,Mode) ->
 						PlayerLevel = Level,
 						io:format("Recebido Socket 10 (find_lobby)\n"),
 						case find_Lobby(Username,PlayerLevel,Sock) of
-							{firstInLobby,Sock}->
-								gen_tcp:send(Sock,"firstInLobby"),
+							{firstInLobby,Socket}->
+								gen_tcp:send(Socket,"firstInLobby"),
 								io:format("~p is first in lobby\n",[Username]),
-								user(Sock,1);
-							{startinGame}->
-								gen_tcp:send(Sock,"startinGame"),
-								io:format("Starting a new game\n"),
-								user(Sock,1);
+								user(Socket,1);
+							{startingGame,Socket}->
+								gen_tcp:send(Socket,"startingGame"),
+								io:format("Starting a new game in 5 seconds\n"),
+								user(Socket,1);
 							{"ERROR:Lobby_found_but_full"}->
 								gen_tcp:send(Sock,"ERROR:Lobby_found_but_full"),
 								io:format("~p found a full lobby\n",[Username]),
