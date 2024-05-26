@@ -4,7 +4,7 @@
 		cancel_find/2]).
 
 startLobbyManager() -> 
-	register(?MODULE,spawn(fun() -> lobby([]) end)). 
+	register(?MODULE,spawn(fun() -> lobby(#{}) end)). 
 
 %Lobby = spawn(fun()->lobby(maps:put(Nivel,LiderUsername,PlayerMap)) end),
 
@@ -21,9 +21,9 @@ find_Lobby(Username,Nivel,Socket)->
 cancel_find(LobbyLevel,Player)->
 	?MODULE ! {remove_player,LobbyLevel,Player,self()},
 	receive
-		{Res,?MODULE} -> Res;
+		{cancel_find} -> cancel_find;
 		{player_not_found}->
-			io:format("ERROR:Player_Not_Found")
+			"ERROR:Player_Not_Found"
 	end.
 
 find_Room(PlayerLevel, PlayerMap) ->
@@ -37,23 +37,23 @@ find_Room(PlayerLevel, PlayerMap) ->
 	case maps:find({PlayerLevel - 1, PlayerLevel + 1}, PlayerMap) of
 		{ok, {PlayerList,SocketPrimeiroJogador}} -> 
 			{ok, {PlayerList,SocketPrimeiroJogador}, {PlayerLevel - 1, PlayerLevel + 1}};
-	error ->
-		case maps:find({PlayerLevel - 2, PlayerLevel}, PlayerMap) of
-			{ok, {PlayerList,SocketPrimeiroJogador}} -> 
-				{ok,{PlayerList,SocketPrimeiroJogador}, {PlayerLevel - 2, PlayerLevel-1}};
 		error ->
-			case maps:find({PlayerLevel, PlayerLevel + 2}, PlayerMap) of
+			case maps:find({PlayerLevel - 2, PlayerLevel}, PlayerMap) of
 				{ok, {PlayerList,SocketPrimeiroJogador}} -> 
-					{ok, {PlayerList,SocketPrimeiroJogador}, {PlayerLevel+1, PlayerLevel + 2}};
-			error ->
-				case maps:find({PlayerLevel - 1, PlayerLevel}, PlayerMap) of
-					{ok, {PlayerList,SocketPrimeiroJogador}} -> 
-						{ok, {PlayerList,SocketPrimeiroJogador}, {PlayerLevel - 1, PlayerLevel}};
+					{ok,{PlayerList,SocketPrimeiroJogador}, {PlayerLevel - 2, PlayerLevel-1}};
 				error ->
-					case maps:find({PlayerLevel, PlayerLevel + 1}, PlayerMap) of
+					case maps:find({PlayerLevel, PlayerLevel + 2}, PlayerMap) of
 						{ok, {PlayerList,SocketPrimeiroJogador}} -> 
-							{ok, {PlayerList,SocketPrimeiroJogador}, {PlayerLevel, PlayerLevel + 1}};
-					error -> error
+							{ok, {PlayerList,SocketPrimeiroJogador}, {PlayerLevel+1, PlayerLevel + 2}};
+						error ->
+							case maps:find({PlayerLevel - 1, PlayerLevel}, PlayerMap) of
+								{ok, {PlayerList,SocketPrimeiroJogador}} -> 
+									{ok, {PlayerList,SocketPrimeiroJogador}, {PlayerLevel - 1, PlayerLevel}};
+								error ->
+									case maps:find({PlayerLevel, PlayerLevel + 1}, PlayerMap) of
+										{ok, {PlayerList,SocketPrimeiroJogador}} -> 
+											{ok, {PlayerList,SocketPrimeiroJogador}, {PlayerLevel, PlayerLevel + 1}};
+										error -> error
 					end
 				end
 			end
@@ -97,13 +97,15 @@ lobby(PlayerMap)-> %Lobbies de jogadores
 		end;
 		{cancel_find,PlayerLevel,RemovedPlayer,From}->
 			case find_Room(PlayerLevel, PlayerMap) of
-			{ok, PlayerList, _} ->
+			{ok, PlayerList, From} ->
                     case length(PlayerList) of
 						1 ->
-                            lobby(maps:remove(PlayerLevel, PlayerMap));
+                            lobby(maps:remove(PlayerLevel, PlayerMap)),
+							From ! {canceled_find};
                         _ ->
                             NewPlayerList = lists:delete(RemovedPlayer, PlayerList),
-                            lobby(maps:update(PlayerLevel, NewPlayerList, PlayerMap))
+                            lobby(maps:update(PlayerLevel, NewPlayerList, PlayerMap)),
+							From ! {canceled_find}
                     end;
 				_ ->
 					From ! {player_not_found,?MODULE},

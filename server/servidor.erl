@@ -55,18 +55,21 @@ user(Sock,Mode) ->
 		io:format("~p\n",[Data]),
 		case string:split(binary_to_list(Data), " ",all) of
 			%Quando está Logged in	
+			["00", _, _] -> %Login Protocol Code - 00
+				io:format("Sent Login Failure"),
+				gen_tcp:send(Sock,"Error 00");
 			["02", _, _] -> %Register Protocol Code - 02
-				io:format("Sent Account Failure"),
+				io:format("Sent CreateAccount Failure"),
 				gen_tcp:send(Sock,"Error 01");
 			["01",Username]->%Logout Protocol Code - 01
 				io:format("Recebido Socket 01\n"),
 				case logout(Username) of
 					{ok,_}->
-						gen_tcp:send(Sock,"logged out sucessfully"),
+						gen_tcp:send(Sock,"logged_out"),
 						io:format("~p logged out\n",[Username]),
 						user(Sock,0);
 					{"invalid_Username",_}->
-						gen_tcp:send(Sock,"ERROR:Invalid_Username"),
+						gen_tcp:send(Sock,"ERROR:01"),
 						io:format("Invalid Username"),
 						user(Sock,0)
 				end;
@@ -108,8 +111,16 @@ user(Sock,Mode) ->
 				end;
 			["11", LobbyLevel,Player]-> %Cancel Finding Lobby Protocol Code - 11
 				io:format("Recebido Socket 11\n"),
-				cancel_find(LobbyLevel,Player),
-				user(Sock,1);
+				case cancel_find(LobbyLevel,Player) of
+					cancel_find ->
+						gen_tcp:send(Sock,"Cancelled_find"),
+						io:format("Cancelled find for player ~p\n",[Player]),
+						user(Sock,1);
+					"ERROR:Player_Not_Found" ->
+						gen_tcp:send(Sock,"Error 11"),
+						io:format("ERROR 11 - cancel find\n"),
+						user(Sock,1)
+				end;
 			["20",Username] -> %Win game Protocol Code - 20
 			io:format("Recebido Socket 20\n"),
 				win_game(Username),
@@ -130,13 +141,23 @@ user(Sock,Mode) ->
 					{Username,Level} ->
 						Level,
 						io:format("Recebido Socket 00\n"),
-						case login(Username, Password) of
-							{ok,login}->
-								Str = io_lib:format("Logged_in, ~p", [Level]),
-								gen_tcp:send(Sock,Str),
-								io:format("Sent Login Sucess\n"),
-								user(Sock,1)
-						end;
+						if 
+							Username == "Username"->
+								gen_tcp:send(Sock,"Error 00"),
+								io:format("Sent Login Failure\n");
+							Username =/= "Username"->
+								case login(Username, Password) of
+									{ok,login}->
+										Str = io_lib:format("Logged_in, ~p", [Level]),
+										gen_tcp:send(Sock,Str),
+										io:format("Sent Login Sucess\n"),
+										user(Sock,1);
+									{"ERROR:Invalid_Username_for_Login"}->
+										gen_tcp:send(Sock,"Error 00"),
+										io:format("Sent Login Failure\n"),
+										user(Sock,0)
+								end
+							end;
 					{Username,error} ->
 						gen_tcp:send(Sock,"Error 00"),
 						io:format("Sent Login Failure\n"),

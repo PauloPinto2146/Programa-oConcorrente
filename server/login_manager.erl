@@ -46,7 +46,7 @@ loop(Map) ->
 				false ->
 					From ! {ok,?MODULE},
 					level_system ! {new_player,Username,?MODULE},
-					loop(maps:put(Username,{Passwd,0},Map))
+					loop(maps:put(Username,{Passwd,1},Map))
 					%Password, 
 					%nivel
 			end;
