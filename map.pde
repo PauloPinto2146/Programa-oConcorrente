@@ -8,6 +8,7 @@ float velocidade1,velocidade2,velocidade3, velocidade4;
 
 float x1,x2,x3,x4;
 float y1,y2,y3,y4;
+float distSol1,distSol2,distSol3,distSol4;
 
 int curr_level;
 
@@ -97,46 +98,90 @@ void backgroundStars(){
 void drawGame() {
   backgroundStars();
   
+  println("Socket lançado: " +"11 " + curr_level + " " + popupUsername);
+  socket.write("11 "+ curr_level + " " + popupUsername);
+  //delay(30);
   if (socket.available() > 0) {
-    System.out.println(socket.readString());
+    String data = socket.readString();
+    if (data != null) {
+       receivedData = data.trim();
+       println("Received: " + receivedData);
+    }
+    else{
+      errorText = "Unknown Error";
+      activeScreen = "ERROR_POPUP";
+      println("Null Socket");
+    }
   }
-  
-  // Desenha o Sol
-  fill(255, 204, 0); 
-  noStroke();
-  ellipse(centerX, centerY, 150, 150);
-  
-  //Planeta 1
-  x1 = centerX + cos(angle1) * 120;
-  y1 = centerY + sin(angle1) * 120;
-  fill(161, 89, 8); 
-  noStroke(); 
-  ellipse(x1, y1, 15, 15);
-  angle1 += velocidade1;
-  
-  //Planeta 2
-  x2 = centerX + cos(angle2) * 220;
-  y2 = centerY + sin(angle2) * 220;
-  fill(88, 237, 230); 
-  noStroke(); 
-  ellipse(x2, y2, 25, 25);
-  angle2 += velocidade2;
-  
-  //Planeta 3
-  x3 = centerX + cos(angle3) * 280;
-  y3= centerY + sin(angle3) * 280;
-  fill(10, 120, 10); 
-  noStroke(); 
-  ellipse(x3, y3, 30, 30);
-  angle3 += velocidade3;
-  
-  //Planeta 4
-  x4 = centerX + cos(angle4) * 340;
-  y4 = centerY + sin(angle4) * 340;
-  fill(119, 2, 222); 
-  noStroke(); 
-  ellipse(x4, y4, 36, 36);
-  angle4 += velocidade4;
+  if (receivedData.startsWith("[{")){
+    String cleanInput = receivedData.substring(1, receivedData.length() - 1);
+    String[] elements = cleanInput.split(",");
+    ArrayList<Integer> resultList = new ArrayList<Integer>(20);
+    for (String element : elements) {
+        String cleanElement = element.replaceAll("{", "").replaceAll("}", "");
+        resultList.add(int(cleanElement));
+    }
+
+    //[{Posição1X,Posicao1Y,Angulo1,Velocidade1,DistSol1},
+    // {Posição2X,Posicao2Y,Angulo2,Velocidade2,DistSol2},
+    // {Posição3X,Posicao3Y,Angulo3,Velocidade3,DistSol3},
+    // {Posição4X,Posicao4Y,Angulo4,Velocidade4,DistSol4}]
+    
+    x1 = resultList.get(0);
+    y1 = resultList.get(1);
+    angle1 = resultList.get(2);
+    velocidade1 = resultList.get(3);
+    distSol1 = resultList.get(4);
+    x2 = resultList.get(5);
+    y2 = resultList.get(6);
+    angle2 = resultList.get(7);
+    velocidade2 = resultList.get(8);
+    distSol2 = resultList.get(9);
+    x3 = resultList.get(10);
+    y3 = resultList.get(11);
+    angle3 = resultList.get(12);
+    velocidade3 = resultList.get(13);
+    distSol3 = resultList.get(14);
+    x4 = resultList.get(15);
+    y4 = resultList.get(16);
+    angle4 = resultList.get(17);
+    velocidade4 = resultList.get(18);
+    distSol4 = resultList.get(19);
+    
+    
+    // Desenha o Sol
+    fill(255, 204, 0); 
+    noStroke();
+    ellipse(centerX, centerY, 150, 150);
+    
+    //Planeta 1
+    fill(161, 89, 8); 
+    noStroke(); 
+    ellipse(x1, y1, 15, 15);
+    angle1 += velocidade1;
+    
+    //Planeta 2
+    fill(88, 237, 230); 
+    noStroke(); 
+    ellipse(x2, y2, 25, 25);
+    angle2 += velocidade2;
+    
+    //Planeta 3
+    fill(10, 120, 10); 
+    noStroke(); 
+    ellipse(x3, y3, 30, 30);
+    angle3 += velocidade3;
+    
+    //Planeta 4
+    fill(119, 2, 222); 
+    noStroke(); 
+    ellipse(x4, y4, 36, 36);
+    angle4 += velocidade4;
+  }
+  if(receivedData.equals("Error")){
+    activeScreen = "ERROR_POPUP";
+    println("ERROR");
+  }
 }
 
 void drawPopupWindow(int w, int h, int px, int py){
@@ -397,6 +442,7 @@ void drawLoadingScreen() {
   popMatrix();
 
   angle += 0.02;
+  
   if (socket.available() > 0) {
      String data = socket.readString();
      if (data != null) {
@@ -407,15 +453,11 @@ void drawLoadingScreen() {
         println("Null Socket");
      }
   }
-  if (receivedData.equals("firstInLobby")) {
-    //PEDRO
+  if (receivedData.equals("game_started")) {
+    activeScreen = "START_GAME";
   }
-  if (receivedData.equals("startingGame")) {
-    
-  }
-  if(receivedData.equals("Error 00")){
-     errorText = "This account doesn't exist";
-     activeScreen = "ERROR_POPUP";
+  if(receivedData.equals("ERROR:Lobby_found_but_full")){
+     activeScreen = "LOADING";
   }
 }
 
@@ -509,10 +551,36 @@ void keyPressed() {
     }
   }else if (activeScreen == "LOADING") {
     if (key == BACKSPACE && !matchfound) {
-      activeScreen = "LOBBY";
+      println("Socket lançado: " +"11 " + curr_level + " " + popupUsername);
+          socket.write("11 "+ curr_level + " " + popupUsername);
+          delay(30);
+          if (socket.available() > 0) {
+            String data = socket.readString();
+            if (data != null) {
+              receivedData = data.trim();
+              println("Received: " + receivedData);
+              }
+            else{
+              errorText = "Unknown Error";
+              activeScreen = "ERROR_POPUP";
+              println("Null Socket");
+            }
+          }
+          if (receivedData.equals("Cancelled_find")){
+            println("Cancelei procura de partida");
+            activeScreen = "LOBBY";
+          }
+          if(receivedData.equals("Error 11")){
+            errorText = "Player Not Found";
+            activeScreen = "ERROR_POPUP";
+            println("Couldn't Cancel");
+          } 
+    }
+     else {
+          println("Outra tecla pressionada: " + key);
+        }
     }
   }
-}
 
 // Check if Enter or Space keys are pressed
 void keyReleased() {
@@ -640,28 +708,9 @@ void keyReleased() {
     if (key == ENTER || key == ' ') {
       switch (menuButtonIndex) {
         case 1:
-          socket.write("10"+ " "+ popupUsername);
-          delay(30);
-          if (socket.available() > 0) {
-            String data = socket.readString();
-            if (data != null) {
-              receivedData = data.trim();
-              println("Received: " + receivedData);
-              }
-            else{
-              println("Null Socket");
-            }
-          }
-          if (receivedData.equals("firstInLobby")){
-            waitingForLobby = true;
-            activeScreen = "LOADING";
-            //No ecrã de espera receber socket "stopWaiting" que informa ao jogador que a partida está a começar e coloca activeScreen a START_GAME
-            //Tem opção de cancelar a procura de partida, mas mal receba socket que está disponível um jogo não pode mais cancelar
-          }
-          if (receivedData.equals("startingGame")){
-            activeScreen = "LOADING";
-            //Entra diretamente no jogo se este estiver disponivel
-          }
+          println("Socket lançado: " +"10 " + popupUsername);
+          socket.write("10 " + popupUsername);
+          activeScreen = "LOADING";
           break;
         case 2:
           activeScreen = "TUTORIAL_POPUP";
@@ -699,34 +748,6 @@ void keyReleased() {
           activeScreen = "MENU";
           break;
       }
-    }
-  }else if (activeScreen == "LOADING") {
-    if (key == ENTER || key == ' ') {
-          println("Socket lançado: " +"11 " + curr_level + " " + popupUsername);
-          socket.write("11 "+ curr_level + " " + popupUsername);
-          delay(30);
-          if (socket.available() > 0) {
-            String data = socket.readString();
-            if (data != null) {
-              receivedData = data.trim();
-              println("Received: " + receivedData);
-              }
-            else{
-              errorText = "Unknown Error";
-              activeScreen = "ERROR_POPUP";
-              println("Null Socket");
-            }
-          }
-          println(receivedData);
-          if (receivedData.equals("Cancelled_find")){
-            println("Cancelei procura de partida");
-            activeScreen = "LOBBY";
-          }
-          if(receivedData.equals("Error 11")){
-            errorText = "Player Not Found";
-            activeScreen = "ERROR_POPUP";
-            println("Couldn't logout");
-          }
     }
   }
 }
