@@ -5,7 +5,7 @@
 -import(lobby_manager, [startLobbyManager/0,find_Lobby/3,cancel_find/2]).
 -import(level_system, [startLevelSystem/0,win_game/1,lose_game/1,get_level/1,
 		print_top_players/2]).
--import(game, [startGame/0]).
+-import(game, [startGame/1]).
 
 compile() ->
     Modules = [login_manager, lobby_manager, level_system, game, servidor],
@@ -97,7 +97,7 @@ user(Sock,Mode) ->
 								user(Socket,1);
 							{startingGame,Socket}->
 								gen_tcp:send(Socket,"startingGame"),
-								io:format("Starting a new game in 5 seconds\n"),
+								io:format("Started a new game\n"),
 								user(Socket,1);
 							{"ERROR:Lobby_found_but_full"}->
 								gen_tcp:send(Sock,"ERROR:Lobby_found_but_full"),
@@ -110,9 +110,9 @@ user(Sock,Mode) ->
 						user(Sock,1)
 				end;
 			["11", LobbyLevel,Player]-> %Cancel Finding Lobby Protocol Code - 11
-				io:format("Recebido Socket 11\n"),
+				io:format("Recebido Socket 11 (cancel_find) \n"),
 				case cancel_find(LobbyLevel,Player) of
-					cancel_find ->
+					cancelled_find ->
 						gen_tcp:send(Sock,"Cancelled_find"),
 						io:format("Cancelled find for player ~p\n",[Player]),
 						user(Sock,1);
