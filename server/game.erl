@@ -1,62 +1,52 @@
 -module(game).
--export([startGame/2,
-geraValoresPlayers/0,
+-export([startGame/1,
+geraValoresPlayers/1,
 geraValoresPlanetas/0,
-loop/3,
+loop/2,
 alteraPosicaoPlaneta/2,
 alteraPosicaoPlayer/2,
-unique_random_value/3]).
+get_player_by_socket/2,
+receive_keys/1,
+atualiza_com_keys/2,
+get_Sockets/1]).
+-import(level_system, [lose_game/1,win_game/1]).
+-import(jogador, [startJogador/0]).
 
-
-startGame(PlayerMap,Sockets) -> 
+startGame(PlayerMap) -> 
     Size = maps:size(PlayerMap),
     case Size of 
         2 ->
             {Planeta1,Planeta2,Planeta3,Planeta4} = geraValoresPlanetas(),
-            PlanetasMap = #{},
-            maps:put(1, Planeta1, PlanetasMap),  
-            maps:put(2, Planeta2, PlanetasMap),
-            maps:put(3, Planeta3, PlanetasMap),
-            maps:put(4, Planeta4, PlanetasMap),
-            {PlayerValue1,PlayerValue2,_,_} = geraValoresPlayers(),
+            PlanetasMap = #{1 =>Planeta1,2 =>Planeta2,3 =>Planeta3,4 =>Planeta4},
+            {PlayerValue1,PlayerValue2} = geraValoresPlayers(2),
             [Username1,Username2] = maps:keys(PlayerMap),
-            PlayersMap = #{Username1 => PlayerValue1, Username2 => PlayerValue2},
-	        register(?MODULE,spawn(fun() -> loop(PlayersMap,PlanetasMap,Sockets) end));
+            [Socket1,Socket2] = maps:values(PlayerMap),
+            PlayersMap = #{{Username1,Socket1} => PlayerValue1, {Username2,Socket2} => PlayerValue2},
+            io:format("~p\n",[PlanetasMap]),
+	        register(?MODULE,spawn(fun() -> loop(PlayersMap,PlanetasMap) end));
         3 ->
             {Planeta1,Planeta2,Planeta3,Planeta4} = geraValoresPlanetas(),
-            PlanetasMap = #{},
-            maps:put(1, Planeta1, PlanetasMap),  
-            maps:put(2, Planeta2, PlanetasMap),
-            maps:put(3, Planeta3, PlanetasMap),
-            maps:put(4, Planeta4, PlanetasMap),
-            {PlayerValue1,PlayerValue2,PlayerValue3,_} = geraValoresPlayers(),
+            PlanetasMap = #{1 =>Planeta1,2 =>Planeta2,3 =>Planeta3,4 =>Planeta4},
+            {PlayerValue1,PlayerValue2,PlayerValue3} = geraValoresPlayers(3),
             [Username1,Username2,Username3] = maps:keys(PlayerMap),
-            PlayersMap = #{Username1 => PlayerValue1, Username2 => PlayerValue2,Username3 => PlayerValue3},
-	        register(?MODULE,spawn(fun() -> loop(PlayersMap,PlanetasMap,Sockets) end));
+            [Socket1,Socket2,Socket3] = maps:values(PlayerMap),
+            PlayersMap = #{{Username1,Socket1} => PlayerValue1, {Username2,Socket2} => PlayerValue2,{Username3,Socket3} => PlayerValue3},
+	        register(?MODULE,spawn(fun() -> loop(PlayersMap,PlanetasMap) end));
         4 ->
             {Planeta1,Planeta2,Planeta3,Planeta4} = geraValoresPlanetas(),
-            PlanetasMap = #{},
-            maps:put(1, Planeta1, PlanetasMap),  
-            maps:put(2, Planeta2, PlanetasMap),  
-            maps:put(3, Planeta3, PlanetasMap),
-            maps:put(4, Planeta4, PlanetasMap),    
-            {PlayerValue1,PlayerValue2,PlayerValue3,PlayerValue4} = geraValoresPlayers(),
+            PlanetasMap = #{1 =>Planeta1,2 =>Planeta2,3 =>Planeta3,4 =>Planeta4}, 
+            {PlayerValue1,PlayerValue2,PlayerValue3,PlayerValue4} = geraValoresPlayers(4),
             [Username1,Username2,Username3,Username4] = maps:keys(PlayerMap),
-            PlayersMap = #{Username1 => PlayerValue1, Username2 => PlayerValue2,Username3 => PlayerValue3,Username4 => PlayerValue4},
-	        register(?MODULE,spawn(fun() -> loop(PlayersMap,PlanetasMap,Sockets) end))
+            [Socket1,Socket2,Socket3,Socket4] = maps:values(PlayerMap),
+            PlayersMap = #{{Username1,Socket1} => PlayerValue1, {Username2,Socket2} => PlayerValue2,
+                            {Username3,Socket3} => PlayerValue3,{Username4,Socket4} => PlayerValue4},
+	        register(?MODULE,spawn(fun() -> loop(PlayersMap,PlanetasMap) end))
     end.
 
 % Função para gerar um valor único
-unique_random_value(Min, Max, ExistingValues) ->
-    rand:seed(erlang:monotonic_time(), erlang:unique_integer(), erlang:phash2(self())),
-    Value = Min + rand:uniform(Max - Min + 1) - 1,
-    case sets:is_element(Value, ExistingValues) of
-        true -> unique_random_value(Min, Max, ExistingValues); % Gera novamente se o valor já existe
-        false -> Value
-    end.
 
 % Função para gerar uma lista de posições únicos
-geraValoresPlayers()->
+geraValoresPlayers(Number)->
     %Player : {PosicaoX,PosicaoY,Angulo,velocidade,aceleração} 
 
     Posicao1X = 50,
@@ -80,91 +70,137 @@ geraValoresPlayers()->
     Angle2 = math:atan2(360 - Posicao2Y, 560 - Posicao2X),
     Angle3 = math:atan2(360 - Posicao3Y, 560 - Posicao3X),
     Angle4 = math:atan2(360 - Posicao4Y, 560 - Posicao4X),
-    Player1 = {Posicao1X,Posicao1Y,Angle1,Velocidade1,Acel1},
-    Player2 = {Posicao2X,Posicao2Y,Angle2,Velocidade2,Acel2},
-    Player3 = {Posicao3X,Posicao3Y,Angle3,Velocidade3,Acel3},
-    Player4 = {Posicao4X,Posicao4Y,Angle4,Velocidade4,Acel4},
-    {Player1,Player2,Player3,Player4}.
+    case Number of
+        2->
+            Pid1 = startJogador(),
+            Pid2 = startJogador(),
+            Player1 = {100,Angle1,Velocidade1,Acel1,Pid1},
+            Player2 = {100,Angle2,Velocidade2,Acel2,Pid2},
+            {Player1,Player2};
+        3->
+            Pid1 = startJogador(),
+            Pid2 = startJogador(),
+            Pid3 = startJogador(),
+            Player1 = {100,Angle1,Velocidade1,Acel1,Pid1},
+            Player2 = {100,Angle2,Velocidade2,Acel2,Pid2},
+            Player3 = {100,Angle3,Velocidade3,Acel3,Pid3},
+            {Player1,Player2,Player3};
+        4->
+            Pid1 = startJogador(),
+            Pid2 = startJogador(),
+            Pid3 = startJogador(),
+            Pid4 = startJogador(),
+            Player1 = {100,Angle1,Velocidade1,Acel1,Pid1},
+            Player2 = {100,Angle2,Velocidade2,Acel2,Pid2},
+            Player3 = {100,Angle3,Velocidade3,Acel3,Pid3},
+            Player4 = {100,Angle4,Velocidade4,Acel4,Pid4},
+            {Player1,Player2,Player3,Player4}
+    end.
 
 %gerador de números aleatórios
 geraValoresPlanetas()->
     %Planeta : PosiçãoX,PosicaoY,Angulo,Velocidade,DistSol,Tamanho
-    rand:seed(exsplus, os:timestamp()),
     Angle1 = (rand:uniform(361) - 1) * math:pi()/180,
     Angle2 = (rand:uniform(361) - 1) * math:pi()/180,
     Angle3 = (rand:uniform(361) - 1) * math:pi()/180,
     Angle4 = (rand:uniform(361) - 1) * math:pi()/180,
     Velocidade1 = 0.005 + rand:uniform() * (0.04 - 0.005),
-    Velocidade2 = -(0.001 + rand:uniform() * (0.02 - 0.001)),
+    Velocidade2 = 0.001 + rand:uniform() * (0.02 - 0.001),
     Velocidade3 = 0.0008 + rand:uniform() * (0.012 - 0.0008),
-    Velocidade4 = -(0.0005 + rand:uniform() * (0.008 - 0.0005)),
+    Velocidade4 = 0.0005 + rand:uniform() * (0.008 - 0.0005),
+    Raio1 = 15,
+    Raio2 = 25,
+    Raio3 = 30,
+    Raio4 = 36,
     %PosicaoX,PosicaoY,DistanciaDoSol
-    Valor1 = 120,
-    Posicao1X = 540+math:cos(Angle1)*Valor1,
-    Posicao1Y = 360+math:cos(Angle1)*Valor1,
-    Valor2 = 220,
-    Posicao2X = 540+math:cos(Angle2)*Valor2,
-    Posicao2Y = 360+math:cos(Angle2)*Valor2,
-    Valor3 = 280,
-    Posicao3X = 540+math:cos(Angle3)*Valor3,
-    Posicao3Y = 360+math:cos(Angle3)*Valor3,
-    Valor4 = 340,
-    Posicao4X = 540+math:cos(Angle4)*Valor4,
-    Posicao4Y = 360+math:cos(Angle4)*Valor4,
-    Planeta1 = {Posicao1X,Posicao1Y,Velocidade1,Angle1,Valor1},
-    Planeta2 = {Posicao2X,Posicao2Y,Velocidade2,Angle2,Valor2},
-    Planeta3 = {Posicao3X,Posicao3Y,Velocidade3,Angle3,Valor3},
-    Planeta4 = {Posicao4X,Posicao4Y,Velocidade4,Angle4,Valor4},
+    Planeta1 = {Velocidade1,Angle1,Raio1},
+    Planeta2 = {Velocidade2,Angle2,Raio2},
+    Planeta3 = {Velocidade3,Angle3,Raio3},
+    Planeta4 = {Velocidade4,Angle4,Raio4},
     {Planeta1,Planeta2,Planeta3,Planeta4}.
 
-alteraPosicaoPlayer(_,{PosicaoX,PosicaoY,Angulo,Velocidade,Aceleracao})->
+%POSICAO PLAYERS
+alteraPosicaoPlayer(_,{Combustivel,Angulo,Velocidade,Aceleracao,Pid})->
     %Aceleração ou constante ou 0
-    NewVelocidade = Velocidade + Aceleracao / 10 - 0.1, 
-    ForcaGravidade = 0.5,
+    NewVelocidade = Velocidade + Aceleracao / 10 - 0.1,
     %Em 1 segundo a Velocidade=1 vai para 0 e avança 5.2 unidades no ecra
-    NewPosicaoX = PosicaoX + Velocidade * Angulo - ForcaGravidade,
-    NewPosicaoY = PosicaoY + Velocidade * Angulo - ForcaGravidade,
-    {NewPosicaoX,NewPosicaoY,Angulo,NewVelocidade,Aceleracao-Aceleracao/10}.
-
+    {Combustivel,Angulo,NewVelocidade,Aceleracao-Aceleracao/10,Pid}.
 
 newPosicaoPlayers(PlayersMap)->
-    maps:fold(
-        fun(Player, {PosicaoX,PosicaoY, Angulo, Velocidade, Aceleracao}, Acc) ->
-            NovosAtributos = alteraPosicaoPlayer(Player, {PosicaoX,PosicaoY, Angulo, Velocidade, Aceleracao}),
-            maps:put(Player, NovosAtributos, Acc)
-        end,
-        #{},
-        PlayersMap
-    ).
+    NewPlayerMap = maps:map(fun(Player,Posicao) -> alteraPosicaoPlayer(Player, Posicao) end, PlayersMap),
+    NewPlayerMap.
 
-alteraPosicaoPlaneta(Planeta,{_,_,Angulo,Velocidade,DistSol})->
-    NewPosicaoX = 540 + math:cos(Angulo) * DistSol,
-    NewPosicaoY = 360 + math:sin(Angulo) * DistSol,
+%POSICAO PLANETAS
+alteraPosicaoPlaneta(_,{Velocidade,Angulo,Raio})->
     NewAngulo = Angulo+Velocidade,
-    {Planeta,{NewPosicaoX,NewPosicaoY,NewAngulo,Velocidade}}.
+    {Velocidade,NewAngulo,Raio}.
 
 newPosicaoPlanetas(PlanetMap) ->
-    maps:fold(
-        fun(Planeta, {PosicaoX,PosicaoY,Angulo,Velocidade,DistSol}, Acc) ->
-            NovaPosicao = 
-                alteraPosicaoPlaneta(Planeta, {PosicaoX,PosicaoY,Angulo,Velocidade,DistSol}),
-            maps:put(Planeta, NovaPosicao, Acc)
-        end,
-        #{},
-        PlanetMap
-    ).
-%[{PosiçãoX,PosicaoY,Angulo,Velocidade,DistSol},{PosiçãoX,PosicaoY,Angulo,Velocidade,DistSol}]
-loop(PlayersMap,PlanetMap,Sockets)->
-    %PlayerUsername : {PosicaoX,PosicaoY,Angulo,velocidade,aceleração} 
+    NewPlanetMap = maps:map(fun(Planet,Posicao) -> alteraPosicaoPlaneta(Planet, Posicao) end, PlanetMap),
+    NewPlanetMap.
+    
+get_Sockets(PlayerMap)->
+    Players = maps:keys(PlayerMap),
+    SocketList = lists:map(fun({_,Socket})->Socket end, Players),
+    SocketList.
+
+get_player_by_socket(Socket, [{Player, Socket} | _Tail]) ->
+        % Se o Socket no tuplo corresponder ao Socket procurado, retorna o Player
+        Player;
+get_player_by_socket(Socket, [_Head | Tail]) ->
+        % Caso contrário, continua procurando na cauda da lista
+        get_player_by_socket(Socket, Tail);
+get_player_by_socket(_Socket, []) ->
+        % Se a lista estiver vazia, retorna undefined ou qualquer valor que indique não encontrado
+        undefined.
+
+atualiza_com_keys(Key,Value)->
+    {Combustivel,Angulo,Velocidade,Aceleracao,Pid} = Value,
+    Pid ! {check_keys,self()},
+    receive
+        {receive_keys,Keys}->
+            Esq= maps:get("ESQUERDO",Keys),
+            Dir= maps:get("DIREITO",Keys),
+            Centr= maps:get("CENTRO",Keys),
+            
+            #{Key=>{
+                Combustivel-((Esq+Dir+Centr)*0.1),
+                Angulo + (Esq-Dir),
+                Velocidade,
+                Aceleracao + (Centr*0.5),
+                Pid
+                }
+            }
+    end.
+
+receive_keys(PlayersMap)->
+    maps:map(fun(Key,Value) -> atualiza_com_keys(Key,Value) end,PlayersMap).
+
+loop(PlayersMap,PlanetMap)->
+    %{PlayerUsername,Socket} : {Combustivel,Angulo,velocidade,aceleração,Pid} 
     %aceleração = velocidade_vetorial / alteração_do_tempo
     %Posição dos jogadores no espaço - ecran = 1080, 720
-    %Planeta : PosiçãoX,PosicaoY,Angulo,Velocidade,DistSol
+    %Planeta : Velocidade,Angulo,DistSol
     receive
-    after 1000/10 -> %tps = 10
-        ListPosicaoPlanetas = maps:values(PlanetMap),
-        Str = io_lib:format("~p", ListPosicaoPlanetas),
-        lists:foreach(fun(Socket) -> gen_tcp:send(Socket,Str) end, Sockets),
-        loop(newPosicaoPlayers(PlayersMap), newPosicaoPlanetas(PlanetMap),Sockets)
+        {disconnected,Sock}->
+            Players = maps:keys(PlayersMap),
+            Player = get_player_by_socket(Sock,Players),
+            lose_game(Player),
+            loop(maps:remove(Player,PlayersMap),PlanetMap)
+        after 40 -> %tps = 25
+            NewPlayerMap = receive_keys(PlayersMap),
+            case maps:size(NewPlayerMap) of 
+                1 ->
+                    {Player,_}= maps:keys(NewPlayerMap),
+                    win_game(Player);
+                _ ->
+                    ListPosicaoPlanetas = maps:values(PlanetMap),
+                    Str = lists:flatten(io_lib:format("~p", [ListPosicaoPlanetas])),
+                    CleanStr = lists:flatten(string:replace(Str, "\n", "", all)),
+                    Sockets = get_Sockets(NewPlayerMap),
+                    lists:foreach(fun(Socket) -> gen_tcp:send(Socket,CleanStr) end, Sockets),
+                    loop(newPosicaoPlayers(NewPlayerMap), newPosicaoPlanetas(PlanetMap))
+        end
     end.
 
 % PRECISAR DE ATUALIZAR RECEBENDO SOCKETS DE POSIÇÕES

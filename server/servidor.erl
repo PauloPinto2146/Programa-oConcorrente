@@ -6,6 +6,7 @@
 -import(level_system, [startLevelSystem/0,win_game/1,lose_game/1,get_level/1,
 		print_top_players/2]).
 -import(game, [startGame/1]).
+-import(jogador,[startJogador/0]).
 
 compile() ->
     Modules = [login_manager, lobby_manager, level_system, game, servidor],
@@ -43,13 +44,25 @@ user(Sock,Mode) ->
 	{tcp, _, Data} when Mode =:= 2 ->
 		%Quando está a jogar
 		io:format("~p\n",[Data]),
-		case string:split(binary_to_list(Data), " ",all) of
-			["30",Username] -> %Purpulsor da esquerda
-				Username;
-			["31",Username] -> %Purpulsor da direita
-				Username;
-			["33", Username] -> %Purpulsor linear
-				Username
+		case binary_to_list(Data) of
+			"30" -> %Purpulsor da esquerda premido
+				jogador ! purp_esquerdo_pressionado,
+				user(Sock,2);
+			"31" -> %Purpulsor da direita premido
+				jogador ! purp_direito_pressionado,
+				user(Sock,2);
+			"32" -> %Purpulsor central premido
+				jogador ! purp_central_pressionado,
+				user(Sock,2);
+			"40" -> %Purpulsor da esquerda despremido
+				jogador ! purp_esquerdo_despressionado,
+				user(Sock,2);
+			"41" -> %Purpulsor da direita despremido
+				jogador ! purp_direito_despressionado,
+				user(Sock,2);
+			"42" -> %Purpulsor central despremido
+				jogador ! purp_central_despressionado,
+				user(Sock,2)
 		end;
 	{tcp, _, Data} when Mode =:= 1 ->
 		io:format("~p\n",[Data]),
@@ -98,7 +111,7 @@ user(Sock,Mode) ->
 							{startingGame,Socket}->
 								gen_tcp:send(Socket,"startingGame"),
 								io:format("Started a new game\n"),
-								user(Socket,1);
+								user(Socket,2);
 							{"ERROR:Lobby_found_but_full"}->
 								gen_tcp:send(Sock,"ERROR:Lobby_found_but_full"),
 								io:format("~p found a full lobby\n",[Username]),
@@ -180,6 +193,7 @@ user(Sock,Mode) ->
 				end
 		end;
 	{tcp_closed, _} ->
+		game ! {disconnected,Sock},
 		io:format("Utilizador desconectado\n");
 	{tcp_error, _, _} ->
 		io:format("Error\n")

@@ -3,7 +3,7 @@
 		find_Lobby/3,
 		cancel_find/2,
 		start_game/1]).
--import(game, [startGame/2]).
+-import(game, [startGame/1]).
 startLobbyManager() -> 
 	register(?MODULE,spawn(fun() -> lobby(#{}) end)). 
 
@@ -76,7 +76,7 @@ start_game(PlayerMap) ->
 	Sockets = maps:values(PlayerMap),
 	lists:foreach(fun(Socket) -> gen_tcp:send(Socket,"game_started") end, Sockets),
 	io:format("Starting game with players: ~p~n", [maps:keys(PlayerMap)]),
-	startGame(PlayerMap,Sockets).
+	startGame(PlayerMap).
 
 lobby(LobbyMap)-> %Lobbies de jogadores
 	%LobbyMap = {MinLevel,MaxLevel} : {Jogador1:Socket1,Jogador2:Socket2,Jogador3:Socket3,Jogador4:Socket4}
@@ -133,7 +133,7 @@ lobby(LobbyMap)-> %Lobbies de jogadores
 						Number ->
 							?MODULE ! {startingGame, ?MODULE},
 							start_game(NewPlayerMap),
-							lobby(NewPlayerMap);
+							lobby(maps:remove(Level,LobbyMap));
 						_ ->
 							lobby(NewPlayerMap)
 					end;
