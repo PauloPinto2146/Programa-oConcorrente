@@ -8,7 +8,7 @@ float velocidade1,velocidade2,velocidade3, velocidade4;
 
 float x1,x2,x3,x4;
 float y1,y2,y3,y4;
-float distSol1,distSol2,distSol3,distSol4;
+float raio1,raio2,raio3,raio4;
 
 int curr_level;
 
@@ -98,8 +98,8 @@ void backgroundStars(){
 void drawGame() {
   backgroundStars();
   
-  println("Socket lançado: " +"11 " + curr_level + " " + popupUsername);
-  socket.write("11 "+ curr_level + " " + popupUsername);
+  //println("Socket lançado: " +"11 " + curr_level + " " + popupUsername);
+  //socket.write("11 "+ curr_level + " " + popupUsername);
   //delay(30);
   if (socket.available() > 0) {
     String data = socket.readString();
@@ -113,41 +113,77 @@ void drawGame() {
       println("Null Socket");
     }
   }
+  float anglePlayer = 0;
+  float x = width / 2 + cos(anglePlayer) * orbitRadius;
+  float y = height / 2 + sin(anglePlayer) * orbitRadius;
+  
+  pushMatrix();
+  translate(x, y);
+  rotate(atan2(height / 2 - y, width / 2 - x));
+  
+  // Janela
+  fill(105, 208, 247);
+  ellipse(0, -19 * tamanho, 28 * tamanho, 25 * tamanho);
+  
+  // Propulsores
+  fill(121,121,121);
+  rect(-35 * tamanho, 8 * tamanho, 70 * tamanho, 10 * tamanho);
+  
+  beginShape();
+  vertex(-5 * tamanho, 26 * tamanho);
+  vertex(5 * tamanho, 26 * tamanho);
+  vertex(15 * tamanho, 36 * tamanho);
+  vertex(-15 * tamanho, 36 * tamanho);
+  endShape(CLOSE);
+  
+  // Asas da nave
+  fill(255, 0, 0);
+  beginShape();
+  vertex(-22 * tamanho, -10 * tamanho);
+  vertex(-48 * tamanho, 25 * tamanho);
+  vertex(-10 * tamanho, 2 * tamanho);
+  endShape(CLOSE);
+
+  beginShape();
+  vertex(22 * tamanho, -10 * tamanho);
+  vertex(48 * tamanho, 25 * tamanho);
+  vertex(10 * tamanho, 2 * tamanho);
+  endShape(CLOSE);
+  
+  rect(-12.5 * tamanho, 20 * tamanho, 25 * tamanho, 10 * tamanho);
+  
+  // Corpo da nave
+  fill(200);
+  ellipse(0, 0, 50 * tamanho, 50 * tamanho);
+  
+  popMatrix();
+  
   if (receivedData.startsWith("[{")){
     String cleanInput = receivedData.substring(1, receivedData.length() - 1);
     String[] elements = cleanInput.split(",");
-    ArrayList<Integer> resultList = new ArrayList<Integer>(20);
+    ArrayList<Float> resultList = new ArrayList<Float>(20);
     for (String element : elements) {
-        String cleanElement = element.replaceAll("{", "").replaceAll("}", "");
-        resultList.add(int(cleanElement));
+        String cleanElement = element.replaceAll("\\{", "").replaceAll("\\}", "");
+        resultList.add(float(cleanElement));
     }
 
-    //[{Posição1X,Posicao1Y,Angulo1,Velocidade1,DistSol1},
-    // {Posição2X,Posicao2Y,Angulo2,Velocidade2,DistSol2},
-    // {Posição3X,Posicao3Y,Angulo3,Velocidade3,DistSol3},
-    // {Posição4X,Posicao4Y,Angulo4,Velocidade4,DistSol4}]
+    //[{Velocidade1,Angle1,Raio1},
+    // {Velocidade2,Angle2,Raio2},
+    // {Velocidade3,Angle3,Raio3},
+    // {Velocidade4,Angle4,Raio4}]
     
-    x1 = resultList.get(0);
-    y1 = resultList.get(1);
-    angle1 = resultList.get(2);
-    velocidade1 = resultList.get(3);
-    distSol1 = resultList.get(4);
-    x2 = resultList.get(5);
-    y2 = resultList.get(6);
-    angle2 = resultList.get(7);
-    velocidade2 = resultList.get(8);
-    distSol2 = resultList.get(9);
-    x3 = resultList.get(10);
-    y3 = resultList.get(11);
-    angle3 = resultList.get(12);
-    velocidade3 = resultList.get(13);
-    distSol3 = resultList.get(14);
-    x4 = resultList.get(15);
-    y4 = resultList.get(16);
-    angle4 = resultList.get(17);
-    velocidade4 = resultList.get(18);
-    distSol4 = resultList.get(19);
-    
+    velocidade1 = resultList.get(0);
+    angle1 = resultList.get(1);
+    raio1 = resultList.get(2);
+    velocidade2 = resultList.get(3);
+    angle2 = resultList.get(4);
+    raio2 = resultList.get(5);
+    velocidade3 = resultList.get(6);
+    angle3 = resultList.get(7);
+    raio3 = resultList.get(8);
+    velocidade4 = resultList.get(9);
+    angle4 = resultList.get(10);
+    raio4 = resultList.get(11);
     
     // Desenha o Sol
     fill(255, 204, 0); 
@@ -158,24 +194,32 @@ void drawGame() {
     fill(161, 89, 8); 
     noStroke(); 
     ellipse(x1, y1, 15, 15);
+    x1 = 540 + cos(angle1) * 120;
+    y1 = 360 + sin(angle1) * 120;
     angle1 += velocidade1;
     
     //Planeta 2
     fill(88, 237, 230); 
     noStroke(); 
     ellipse(x2, y2, 25, 25);
+    x2 = 540 + cos(angle2) * 220;
+    y2 = 360 + sin(angle2) * 220;
     angle2 += velocidade2;
     
     //Planeta 3
     fill(10, 120, 10); 
     noStroke(); 
     ellipse(x3, y3, 30, 30);
+    x3 = 540 + cos(angle3) * 280;
+    y3 = 360 + sin(angle3) * 280;
     angle3 += velocidade3;
     
     //Planeta 4
     fill(119, 2, 222); 
     noStroke(); 
     ellipse(x4, y4, 36, 36);
+    x4 = 540 + cos(angle4) * 340;
+    y4 = 360 + sin(angle4) * 340;
     angle4 += velocidade4;
   }
   if(receivedData.equals("Error")){
@@ -496,6 +540,35 @@ void keyPressed() {
     if(keyCode == UP || key == 'w'){
       println("Started game");
     }
+    if (key == BACKSPACE && !matchfound) {
+      println("Socket lançado: " +"11 " + curr_level + " " + popupUsername);
+          socket.write("11 "+ curr_level + " " + popupUsername);
+          delay(30);
+          if (socket.available() > 0) {
+            String data = socket.readString();
+            if (data != null) {
+              receivedData = data.trim();
+              println("Received: " + receivedData);
+              }
+            else{
+              errorText = "Unknown Error";
+              activeScreen = "ERROR_POPUP";
+              println("Null Socket");
+            }
+          }
+          if (receivedData.equals("Cancelled_find")){
+            println("Cancelei procura de partida");
+            activeScreen = "LOBBY";
+          }
+          if(receivedData.equals("Error 11")){
+            errorText = "Player Not Found";
+            activeScreen = "ERROR_POPUP";
+            println("Couldn't Cancel");
+          } 
+    }
+     else {
+          println("Outra tecla pressionada: " + key);
+        }
   }
   if (activeScreen == "MENU") {
     if (keyCode == UP || key == 'w') {
