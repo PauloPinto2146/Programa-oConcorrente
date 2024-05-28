@@ -1,4 +1,4 @@
 TODO:
   - Combustivel grafica (Não funciona especifica para cada player) 
   - Diferenciar naves consoante jogadores
-  - Colisões - guarda posx e posy no server
+  - Colisões, dado raio, posx e posy do servidor
