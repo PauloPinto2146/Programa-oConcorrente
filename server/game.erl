@@ -10,7 +10,7 @@ receive_keys/1,
 atualiza_com_keys/2,
 clean_string/2,
 get_Sockets/1]).
--import(level_system, [lose_game/1,win_game/1]).
+-import(level_system, [lose_game/2,win_game/2]).
 -import(jogador, [startJogador/0]).
 
 startGame(PlayerMap) -> 
@@ -102,26 +102,26 @@ geraValoresPlayers(Number)->
         2->
             Pid1 = startJogador(),
             Pid2 = startJogador(),
-            Player1 = {100,Angle1,Velocidade1,Acel1,Pid1},
-            Player2 = {100,Angle2,Velocidade2,Acel2,Pid2},
+            Player1 = {100,Angle1,Velocidade1,Acel1,Pid1,Posicao1X,Posicao1Y},
+            Player2 = {100,Angle2,Velocidade2,Acel2,Pid2,Posicao2X,Posicao2Y},
             {Player1,Player2};
         3->
             Pid1 = startJogador(),
             Pid2 = startJogador(),
             Pid3 = startJogador(),
-            Player1 = {100,Angle1,Velocidade1,Acel1,Pid1},
-            Player2 = {100,Angle2,Velocidade2,Acel2,Pid2},
-            Player3 = {100,Angle3,Velocidade3,Acel3,Pid3},
+            Player1 = {100,Angle1,Velocidade1,Acel1,Pid1,Posicao1X,Posicao1Y},
+            Player2 = {100,Angle2,Velocidade2,Acel2,Pid2,Posicao2X,Posicao2Y},
+            Player3 = {100,Angle3,Velocidade3,Acel3,Pid3,Posicao3X,Posicao3Y},
             {Player1,Player2,Player3};
         4->
             Pid1 = startJogador(),
             Pid2 = startJogador(),
             Pid3 = startJogador(),
             Pid4 = startJogador(),
-            Player1 = {100,Angle1,Velocidade1,Acel1,Pid1},
-            Player2 = {100,Angle2,Velocidade2,Acel2,Pid2},
-            Player3 = {100,Angle3,Velocidade3,Acel3,Pid3},
-            Player4 = {100,Angle4,Velocidade4,Acel4,Pid4},
+            Player1 = {100,Angle1,Velocidade1,Acel1,Pid1,Posicao1X,Posicao1Y},
+            Player2 = {100,Angle2,Velocidade2,Acel2,Pid2,Posicao2X,Posicao2Y},
+            Player3 = {100,Angle3,Velocidade3,Acel3,Pid3,Posicao3X,Posicao3Y},
+            Player4 = {100,Angle4,Velocidade4,Acel4,Pid4,Posicao4X,Posicao4Y},
             {Player1,Player2,Player3,Player4}
     end.
 
@@ -148,15 +148,18 @@ geraValoresPlanetas()->
     {Planeta1,Planeta2,Planeta3,Planeta4}.
 
 %POSICAO PLAYERS
-alteraPosicaoPlayer(_,{Combustivel,Angulo,Velocidade,Aceleracao,Pid})->
+alteraPosicaoPlayer(_,{Combustivel,Angulo,Velocidade,Aceleracao,Pid,PosicaoX,PosicaoY})->
     %Aceleração ou constante ou 0
     NewVelocidade = Velocidade + Aceleracao / 10 - 0.1,
     NewAceleracao = Aceleracao - Aceleracao / 10,
+    NewPosicaoX = PosicaoX - 0.5,
+    NewPosicaoY = PosicaoY - 0.5,
     %Em 1 segundo a Velocidade=1 vai para 0 e avança 5.2 unidades no ecra
-    {Combustivel,Angulo,NewVelocidade,NewAceleracao,Pid}.
+    {Combustivel,Angulo,NewVelocidade,NewAceleracao,Pid,NewPosicaoX,NewPosicaoY}.
     
 newPosicaoPlayers(PlayersMap)->
-    NewPlayerMap = maps:map(fun(Player,Posicao) -> alteraPosicaoPlayer(Player, lists:last(maps:values(Posicao))) end, PlayersMap),
+    NewPlayerMap = maps:map(fun(Player,Posicao) ->                     
+                    alteraPosicaoPlayer(Player, lists:last(maps:values(Posicao))) end, PlayersMap),
     NewPlayerMap.
 
 %POSICAO PLANETAS
@@ -181,7 +184,7 @@ get_player_by_socket(_Socket, []) ->
         undefined.
 
 atualiza_com_keys(Key,Value)->
-    {Combustivel,Angulo,Velocidade,Aceleracao,Pid} = Value,
+    {Combustivel,Angulo,Velocidade,Aceleracao,Pid,PosicaoX,PosicaoY} = Value,
     Pid ! {check_keys,self()},
     receive
         {receive_keys,Keys}->
@@ -194,7 +197,9 @@ atualiza_com_keys(Key,Value)->
                 Angulo + (Esq-Dir),
                 Velocidade,
                 Aceleracao + (Centr*0.5),
-                Pid
+                Pid, 
+                PosicaoX + (math:cos(Angulo)*Velocidade),
+                PosicaoY + (math:sin(Angulo)*Velocidade)
                 }
             }
     end.
@@ -214,22 +219,22 @@ clean_string(PlayersMap,PlanetMap)->
     CleanStrPlanetas++","++CleanStrPlayers.
 
 loop(PlayersMap,PlanetMap)->
-    %{PlayerUsername,Socket,Pid} : {Combustivel,Angulo,velocidade,aceleração,Pid} 
+    %{PlayerUsername,Socket,Pid} : {Combustivel,Angulo,velocidade,aceleração,Pid,PosicaoX,PosicaoY} 
     %aceleração = velocidade_vetorial / alteração_do_tempo
     %Posição dos jogadores no espaço - ecran = 1080, 720
-    %Planeta : {Velocidade,Angulo,DistSol}
+    %Planeta : {Velocidade,Angulo,raio}
     receive
-        {disconnected,Sock}->
+        {disconnected,Sock,From}->
             Players = maps:keys(PlayersMap),
             Player = get_player_by_socket(Sock,Players),
-            lose_game(Player),
+            lose_game(Player,From),
             loop(maps:remove(Player,PlayersMap),PlanetMap)
         after 40 -> %tps = 25
             NewPlayerMap = receive_keys(PlayersMap),
             case maps:size(NewPlayerMap) of 
                 1 ->
-                    {Player,_}= maps:keys(NewPlayerMap),
-                    win_game(Player);
+                    {Player,_,From}= maps:keys(NewPlayerMap),
+                    win_game(Player,From);
                 _ ->
                     Sockets = get_Sockets(NewPlayerMap),
                     CleantStr = clean_string(PlayersMap,PlanetMap),

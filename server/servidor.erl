@@ -197,7 +197,7 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 				end
 		end;
 	{tcp_closed, _} when Mode =:= 2->
-		PidPartida ! {disconnected,Sock},
+		PidPartida ! {disconnected,Sock,PidJogador},
 		io:format("Utilizador desconectado\n");
 	{tcp_closed, _}->
 		io:format("Utilizador desconectado\n");

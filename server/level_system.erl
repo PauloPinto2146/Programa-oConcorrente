@@ -4,8 +4,8 @@
 		top10/0,
 		print_top_players/2,
 		map_tolist_level/1,
-		win_game/1,
-		lose_game/1,
+		win_game/2,
+		lose_game/2,
 		get_level/1,
 		loop/1]).
 
@@ -26,18 +26,18 @@ new_player(Username) -> %Quando nova conta é criada é criado também o perfil 
 		{Res,?MODULE} -> Res
 	end.
 
-win_game(Username)-> %Quando ganha jogo precisa atualizar
+win_game(Username,From)-> %Quando ganha jogo precisa atualizar
 	?MODULE ! {win_game,Username,self()},
 	receive
 		{Res,?MODULE} -> Res;
-		{won_game,?MODULE} -> io:format("YOU WIN!")
+		{won_game,?MODULE} -> io:format("YOU WIN! ~p",[From])
 	end.
 
-lose_game(Username)->
+lose_game(Username,From)->
 	?MODULE ! {lose_game,Username,self()},
 	receive
 		{Res,?MODULE} -> Res;
-		{lost_game,?MODULE} -> io:format("YOU LOST!")
+		{lost_game,?MODULE} -> io:format("YOU LOST!~p",[From])
 	end.
 
 top10()->
