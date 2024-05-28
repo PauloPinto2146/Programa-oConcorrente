@@ -102,7 +102,7 @@ loop(Map)->
 		{lose_game,Username,From}->
 			case maps:find(Username,Map) of
 				{ok,{Level,WinsPerLevel,Wins,Losses,LossesCons}} ->
-					if LossesCons == Level/2 ->
+					if LossesCons >= Level/2 ->
 						loop(maps:update(Username,{Level-1,WinsPerLevel,Wins,Losses+1,0},Map));
 					LossesCons < Level/2 ->
 						From ! {ok,?MODULE},

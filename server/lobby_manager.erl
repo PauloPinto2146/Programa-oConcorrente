@@ -2,7 +2,8 @@
 -export([startLobbyManager/0,
 		find_Lobby/3,
 		cancel_find/2,
-		start_game/1]).
+		start_game/1,
+		send_info/2]).
 -import(game, [startGame/1]).
 startLobbyManager() -> 
 	register(?MODULE,spawn(fun() -> lobby(#{}) end)). 
@@ -15,7 +16,7 @@ find_Lobby(Username,Nivel,Socket)->
 		{first_in_lobby,_} -> 
 			{firstInLobby,Socket};
 		{startingGame,_}->
-			io:format("LANCEI STARTING GAME\n"),
+			io:format("Jogo vai começar!\n"),
 			{startingGame,Socket};
 		{full}->
 			{"ERROR:Lobby_found_but_full"},
@@ -72,14 +73,34 @@ find_Room(Nivel, LobbyMap) ->
 					end
 			end
 	end.
+send_starting_game([])->
+	io:format("Sent to everyone start game message\n");
+send_starting_game([From|T])->
+	From ! {startingGame, ?MODULE},
+	send_starting_game(T).
+
+avisa_start_game(PlayerMap)->
+	SocketsFroms = maps:values(PlayerMap),
+	Froms = lists:map(fun(V) -> lists:last(V) end, SocketsFroms),
+	send_starting_game(Froms).
+
+send_info([],_)->
+	io:format("Todos os jogadores estão na partida!\n");
+send_info([Socket|Sockets],NumeroJogador)->
+	%Str = io_lib:format("<<~p>>",[NumeroJogador]),
+	gen_tcp:send(Socket,<<121,NumeroJogador>>),
+	send_info(Sockets,NumeroJogador+1).
+
 start_game(PlayerMap) ->
-	Sockets = maps:values(PlayerMap),
-	lists:foreach(fun(Socket) -> gen_tcp:send(Socket,"game_started") end, Sockets),
+	SocketsFroms = maps:values(PlayerMap),
+	Sockets = lists:map(fun([H|_]) -> H end, SocketsFroms),
+	send_info(Sockets, 1),
 	io:format("Starting game with players: ~p~n", [maps:keys(PlayerMap)]),
 	startGame(PlayerMap).
 
 lobby(LobbyMap)-> %Lobbies de jogadores
-	%LobbyMap = {MinLevel,MaxLevel} : {Jogador1:Socket1,Jogador2:Socket2,Jogador3:Socket3,Jogador4:Socket4}
+	%LobbyMap = {MinLevel,MaxLevel} : {Jogador1:[Socket1,From1],Jogador2:[Socket2,From2],
+									%  Jogador3:[Socket3,From3],Jogador4:[Socket4,From4]}
 	io:format("~p~n", [LobbyMap]),
 	receive
 		{please_cancel,Nivel,RemovedPlayer,From}->
@@ -104,11 +125,11 @@ lobby(LobbyMap)-> %Lobbies de jogadores
 		{find_Lobby,Username,PlayerLevel,Socket,From}->
 			case find_Room(PlayerLevel, LobbyMap) of
 				{ok, PlayerMap, NewLevel} ->
-					NewPlayerMap = maps:put(Username, Socket, PlayerMap),
+					NewPlayerMap = maps:put(Username, [Socket,From], PlayerMap),
 					case length(maps:values(NewPlayerMap)) of
 						4 ->
-							From ! {startingGame,?MODULE},
 							start_game(NewPlayerMap),
+							avisa_start_game(NewPlayerMap),
 							lobby(maps:remove(NewLevel, LobbyMap));
 						3 ->
 							erlang:send_after(5000, ?MODULE, {check_lobby_timeout, NewLevel, 3}),
@@ -121,7 +142,7 @@ lobby(LobbyMap)-> %Lobbies de jogadores
 					end;
 				error ->
 						From ! {first_in_lobby, ?MODULE},
-						NewMap = #{Username => Socket},
+						NewMap = #{Username => [Socket,From]},
 						io:format("Criei novo lobby\n"),
 						lobby(maps:put({PlayerLevel-1,PlayerLevel+1},NewMap,LobbyMap))
 			end;
@@ -131,11 +152,11 @@ lobby(LobbyMap)-> %Lobbies de jogadores
 				{ok,NewPlayerMap}->
 					case maps:size(NewPlayerMap) of
 						Number ->
-							?MODULE ! {startingGame, ?MODULE},
 							start_game(NewPlayerMap),
+							avisa_start_game(NewPlayerMap),
 							lobby(maps:remove(Level,LobbyMap));
 						_ ->
-							lobby(NewPlayerMap)
+							lobby(LobbyMap)
 					end;
             	error ->
                     lobby(LobbyMap)
