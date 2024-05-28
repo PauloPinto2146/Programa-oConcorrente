@@ -182,15 +182,16 @@ void drawGame() {
       x4 = 540 + cos(angle4) * 340;
       y4 = 360 + sin(angle4) * 340;
       angle4 += velocidade4;
-    //[{Combustivel1,Angulo1,velocidade1,aceleração1,Pid1},
-    // {Combustivel2,Angulo2,velocidade2,aceleração2,Pid2},
-    // {Combustivel3,Angulo3,velocidade3,aceleração3,Pid3},
-    // {Combustivel4,Angulo4,velocidade4,aceleração4,Pid4}]
+    //[{Combustivel1,Angulo1,velocidade1,aceleração1,Pid1,P1X,P1Y},
+    // {Combustivel2,Angulo2,velocidade2,aceleração2,Pid2,P2X,P2Y},
+    // {Combustivel3,Angulo3,velocidade3,aceleração3,Pid3,P3X,P3Y},
+    // {Combustivel4,Angulo4,velocidade4,aceleração4,Pid4,P4X,P4Y}]
     if(resultList.size() == 10){
       combustivel1 = resultList.remove(0);
       angulo1 = resultList.remove(0);
       velocidade1p = resultList.remove(0);
-      acceleration1 = resultList.remove(0);resultList.remove(0);
+      acceleration1 = resultList.remove(0);
+      resultList.remove(0);resultList.remove(0);resultList.remove(0);
       
       combustivel2 = resultList.remove(0);
       angulo2 = resultList.remove(0);
