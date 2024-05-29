@@ -37,6 +37,11 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 	receive
 	{partida_pid,NewPidPartida, NewPidJogador}->
 		user(Sock,2,NewPidJogador,NewPidPartida);
+	{lose_game,Username,_}->  %Lose game Protocol Code - 21
+		io:format("~p lost the game\n",[Username]),
+		io:format("Lancado Socket 21\n"),
+		gen_tcp:send("21"),
+		user(Sock,1,null,null);
 	{line, Data} ->
 		gen_tcp:send(Sock, Data),
 		%Lança para Java o Socket que tem que ser processado onde pode ter informação sobre o que quer fazer
@@ -46,23 +51,23 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 	{tcp, _, Data} when Mode =:= 2 ->
 		%Quando está a jogar
 		io:format("~p\n",[Data]),
-		case string:split(binary_to_list(Data), " ",all) of
-			["30"] -> %Purpulsor da esquerda premido
+		case Data of
+			<<"30">> -> %Purpulsor da esquerda premido
 				PidJogador ! purp_esquerdo_pressionado,
 				user(Sock,2,PidJogador,PidPartida);
-			["31"] -> %Purpulsor da direita premido
+			<<"31">> -> %Purpulsor da direita premido
 				PidJogador ! purp_direito_pressionado,
 				user(Sock,2,PidJogador,PidPartida);
-			["32"] -> %Purpulsor central premido
+			<<"32">> -> %Purpulsor central premido
 				PidJogador ! purp_central_pressionado,
 				user(Sock,2,PidJogador,PidPartida);
-			["40"] -> %Purpulsor da esquerda despremido
+			<<"40">> -> %Purpulsor da esquerda despremido
 				PidJogador ! purp_esquerdo_despressionado,
 				user(Sock,2,PidJogador,PidPartida);
-			["41"] -> %Purpulsor da direita despremido
+			<<"41">> -> %Purpulsor da direita despremido
 				PidJogador ! purp_direito_despressionado,
 				user(Sock,2,PidJogador,PidPartida);
-			["42"] -> %Purpulsor central despremido
+			<<"42">> -> %Purpulsor central despremido
 				PidJogador ! purp_central_despressionado,
 				user(Sock,2,PidJogador,PidPartida);
 			_->
@@ -143,11 +148,6 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 			io:format("Recebido Socket 20\n"),
 				win_game(Username),
 				io:format("~p won the game\n",[Username]),
-				user(Sock,1,null,null);
-			["21",Username] -> %Lose game Protocol Code - 21
-				io:format("Recebido Socket 21\n"),
-				lose_game(Username),
-				io:format("~p lost the game\n",[Username]),
 				user(Sock,1,null,null)
 		end;
 	{tcp, _, Data} when Mode =:= 0 ->

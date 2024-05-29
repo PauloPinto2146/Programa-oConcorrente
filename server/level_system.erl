@@ -34,6 +34,7 @@ win_game(Username,From)-> %Quando ganha jogo precisa atualizar
 	end.
 
 lose_game(Username,From)->
+	From ! {lose_game,Username,self()},
 	?MODULE ! {lose_game,Username,self()},
 	receive
 		{Res,?MODULE} -> Res;
