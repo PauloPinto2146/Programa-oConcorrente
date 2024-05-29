@@ -1,3 +1,8 @@
+void reset(){
+  popupUsername = "Username";
+  popupPassword = "Password";
+  confirmPassword = "Confirm Password";
+}
 
 void keyPressed() {
   if (activeScreen.equals("LOADING")){
@@ -41,8 +46,7 @@ void keyPressed() {
       typing();
     } else {
       if (key == BACKSPACE) {
-        popupUsername = "Username";
-        popupPassword = "Password";
+        reset();
         activeScreen = "MENU";
       }
       if (keyCode == UP || key == 'w' || key == 'W') {
@@ -56,9 +60,7 @@ void keyPressed() {
       typing();
     } else {
       if (key == BACKSPACE) {
-        popupUsername = "Username";
-        popupPassword = "Password";
-        confirmPassword = "Confirm Password";
+        reset();
         activeScreen = "MENU";
       }
       if (keyCode == UP || key == 'w' || key == 'W') {
@@ -83,16 +85,19 @@ void keyPressed() {
     }
   } else if (activeScreen.equals("GAME")) {
     if (keyCode == UP || key == 'w' || key == 'W') {
-      println("Socket lançado: 30");
-      socket.write("30");
+      println("Socket lançado: 32");
+      main_boost = true;
+      socket.write("32");
     }
     if (keyCode == LEFT || key == 'a' || key == 'A') {
-      println("Socket lançado: 31");
-      socket.write("31");
+      println("Socket lançado: 30");
+      left_boost = true;
+      socket.write("30");
     }
     if (keyCode == RIGHT || key == 'd' || key == 'D') {
-      println("Socket lançado: 32");
-      socket.write("32");
+      println("Socket lançado: 31");
+      right_boost = true;
+      socket.write("31");
     }
   }
 }
@@ -155,6 +160,7 @@ void keyReleased() {
           }
           if (receivedData.equals("Error 00")) {
             errorText = "This account doesn't exist";
+            reset();
             activeScreen = "ERROR_POPUP";
           }
           break;
@@ -256,9 +262,7 @@ void keyReleased() {
             println("Couldn't logout");
           }
 
-          popupUsername = "Username";
-          popupPassword = "Password";
-          confirmPassword = "Confirm Password";
+          reset();
           activeScreen = "MENU";
           break;
       }
@@ -266,14 +270,17 @@ void keyReleased() {
   } else if (activeScreen.equals("GAME")) {
     if (keyCode == UP || key == 'w' || key == 'W') {
       println("Socket lançado: 40");
+      main_boost = false;
       socket.write("40");
     }
     if (keyCode == LEFT || key == 'a' || key == 'A') {
       println("Socket lançado: 41");
+      left_boost = false;
       socket.write("41");
     }
     if (keyCode == RIGHT || key == 'd' || key == 'D') {
       println("Socket lançado: 42");
+      right_boost = false;
       socket.write("42");
     }
   }

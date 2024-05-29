@@ -51,13 +51,12 @@ int menuButtonIndex = 1, popupButtonIndex = 1;
 
 boolean typing = false;
 boolean matchfound = false; // ativar este boolean para impedir cancelamento da procura
-
-color blue = color(66, 135, 245);
-color white = color(255);
-
 boolean left_boost = false;
 boolean right_boost = false;
 boolean main_boost = false;
+
+color blue = color(66, 135, 245);
+color white = color(255);
 color boost = color(138, 210, 245);
 float fuel = 100;
 
@@ -137,22 +136,25 @@ void drawGame() {
                                      .replaceAll(" ","");
         resultList.add(float(cleanElement));
     }
-      //[{Velocidade1,Angle1,Raio1},
-      // {Velocidade2,Angle2,Raio2},
-      // {Velocidade3,Angle3,Raio3},
-      // {Velocidade4,Angle4,Raio4}]
+      //[{Velocidade1,Angle1,Raio1,DistSol1},
+      // {Velocidade2,Angle2,Raio2,DistSol2},
+      // {Velocidade3,Angle3,Raio3,DistSol3},
+      // {Velocidade4,Angle4,Raio4,DistSol4}]
       velocidade1 = resultList.remove(0);
       angle1 = resultList.remove(0);
-      raio1 = resultList.remove(0);
+      raio1 = resultList.remove(0);resultList.remove(0);
+      
       velocidade2 = resultList.remove(0);
       angle2 = resultList.remove(0);
-      raio2 = resultList.remove(0);
+      raio2 = resultList.remove(0);resultList.remove(0);
+      
       velocidade3 = resultList.remove(0);
       angle3 = resultList.remove(0);
-      raio3 = resultList.remove(0);
+      raio3 = resultList.remove(0);resultList.remove(0);
+      
       velocidade4 = resultList.remove(0);
       angle4 = resultList.remove(0);
-      raio4 = resultList.remove(0);
+      raio4 = resultList.remove(0);resultList.remove(0);
       
       // Desenha o Sol
       fill(255, 204, 0); 
@@ -186,7 +188,41 @@ void drawGame() {
     // {Combustivel2,Angulo2,velocidade2,aceleração2,Pid2,P2X,P2Y},
     // {Combustivel3,Angulo3,velocidade3,aceleração3,Pid3,P3X,P3Y},
     // {Combustivel4,Angulo4,velocidade4,aceleração4,Pid4,P4X,P4Y}]
-    if(resultList.size() == 10){
+    if(resultList.size() == 14){
+      combustivel1 = resultList.remove(0);
+      angulo1 = resultList.remove(0);
+      velocidade1p = resultList.remove(0);
+      acceleration1 = resultList.remove(0);
+      resultList.remove(0);
+      p1x = resultList.remove(0);
+      p1y = resultList.remove(0);
+      
+      combustivel2 = resultList.remove(0);
+      angulo2 = resultList.remove(0);
+      velocidade2p = resultList.remove(0);
+      acceleration2 = resultList.remove(0);
+      resultList.remove(0);
+      p2x = resultList.remove(0);
+      p2y = resultList.remove(0);
+      
+      /*
+      p1x += (cos(angulo1)*velocidade1) - 0.5;
+      p2x += (cos(angulo2)*velocidade2) - 0.5;
+      p1y += (sin(angulo1)*velocidade1) - 0.5;
+      p2y += (sin(angulo2)*velocidade2) - 0.5;
+      */
+      
+      drawNave(p1x,p1y,angulo1,color(0,0,255));
+      drawNave(p2x,p2y,angulo1,color(255,0,0));
+      
+      switch(numJogador){
+        case 1:
+          drawFuelBar(combustivel1);
+        case 2:
+          drawFuelBar(combustivel2);
+      }
+    }
+    if(resultList.size() == 21){
       combustivel1 = resultList.remove(0);
       angulo1 = resultList.remove(0);
       velocidade1p = resultList.remove(0);
@@ -197,37 +233,24 @@ void drawGame() {
       angulo2 = resultList.remove(0);
       velocidade2p = resultList.remove(0);
       acceleration2 = resultList.remove(0);
+      resultList.remove(0);resultList.remove(0);resultList.remove(0);
       
-      p1x += (cos(angulo1)*velocidade1);
-      p2x += (cos(angulo2)*velocidade2);
-      p1y += (sin(angulo1)*velocidade1);
-      p2y += (sin(angulo2)*velocidade2);
-      switch(numJogador){
-        case 1:
-          drawFuelBar(combustivel1);
-        case 2:
-          drawFuelBar(combustivel2);
-      }
-    }
-    if(resultList.size() == 15){
-      combustivel1 = resultList.remove(0);
-      angulo1 = resultList.remove(0);
-      velocidade1p = resultList.remove(0);
-      acceleration1 = resultList.remove(0);resultList.remove(0);
-      combustivel2 = resultList.remove(0);
-      angulo2 = resultList.remove(0);
-      velocidade2p = resultList.remove(0);
-      acceleration2 = resultList.remove(0);resultList.remove(0);
       combustivel3 = resultList.remove(0);
       angulo3 = resultList.remove(0);
       velocidade3p = resultList.remove(0);
       acceleration3 = resultList.remove(0);
-      p1x += (cos(angulo1)*velocidade1);
-      p2x += (cos(angulo2)*velocidade2);
-      p3x += (cos(angulo3)*velocidade3);
-      p1y += (sin(angulo1)*velocidade1);
-      p2y += (sin(angulo2)*velocidade2);
-      p3y += (sin(angulo3)*velocidade3);
+      
+      p1x += (cos(angulo1)*velocidade1) - 0.5;
+      p2x += (cos(angulo2)*velocidade2) - 0.5;
+      p3x += (cos(angulo3)*velocidade3) - 0.5;
+      p1y += (sin(angulo1)*velocidade1) - 0.5;
+      p2y += (sin(angulo2)*velocidade2) - 0.5;
+      p3y += (sin(angulo3)*velocidade3) - 0.5;
+      
+      drawNave(p1x,p1y,angulo1,color(0,0,255));
+      drawNave(p2x,p2y,angulo1,color(255,0,0));
+      drawNave(p3x,p3y,angulo3,color(0,255,0));
+      
       switch(numJogador){
         case 1:
           drawFuelBar(combustivel1);
@@ -241,27 +264,40 @@ void drawGame() {
       combustivel1 = resultList.remove(0);
       angulo1 = resultList.remove(0);
       velocidade1p = resultList.remove(0);
-      acceleration1 = resultList.remove(0);resultList.remove(0);
+      acceleration1 = resultList.remove(0);
+      resultList.remove(0);resultList.remove(0);resultList.remove(0);
+      
       combustivel2 = resultList.remove(0);
       angulo2 = resultList.remove(0);
       velocidade2p = resultList.remove(0);
-      acceleration2 = resultList.remove(0);resultList.remove(0);
+      acceleration2 = resultList.remove(0);
+      resultList.remove(0);resultList.remove(0);resultList.remove(0);
+      
       combustivel3 = resultList.remove(0);
       angulo3 = resultList.remove(0);
       velocidade3p = resultList.remove(0);
-      acceleration3 = resultList.remove(0);resultList.remove(0);
+      acceleration3 = resultList.remove(0);
+      resultList.remove(0);resultList.remove(0);resultList.remove(0);
+      
       combustivel4 = resultList.remove(0);
       angulo4 = resultList.remove(0);
       velocidade4p = resultList.remove(0);
       acceleration4 = resultList.remove(0);
-      p1x += (cos(angulo1)*velocidade1);
-      p2x += (cos(angulo2)*velocidade2);
-      p3x += (cos(angulo3)*velocidade3);
-      p4x += (cos(angulo4)*velocidade4);
-      p1y += (sin(angulo1)*velocidade1);
-      p2y += (sin(angulo2)*velocidade2);
-      p3y += (sin(angulo3)*velocidade3);
-      p4y += (sin(angulo4)*velocidade4);
+      
+      p1x += (cos(angulo1)*velocidade1) - 0.5;
+      p2x += (cos(angulo2)*velocidade2) - 0.5;
+      p3x += (cos(angulo3)*velocidade3) - 0.5;
+      p4x += (cos(angulo4)*velocidade4) - 0.5;
+      p1y += (sin(angulo1)*velocidade1) - 0.5;
+      p2y += (sin(angulo2)*velocidade2) - 0.5;
+      p3y += (sin(angulo3)*velocidade3) - 0.5;
+      p4y += (sin(angulo4)*velocidade4) - 0.5;
+      
+      drawNave(p1x,p1y,angulo1,color(0,0,255));
+      drawNave(p2x,p2y,angulo1,color(255,0,0));
+      drawNave(p3x,p3y,angulo3,color(0,255,0));
+      drawNave(p4x,p4y,angulo4,color(255,255,0));
+      
       switch(numJogador){
         case 1:
           drawFuelBar(combustivel1);

@@ -179,78 +179,23 @@ void drawLoadingScreen() {
   stroke(0);
   ellipse(width/2, height/2, 210, 210);
   
-  // Desenha o planeta no centro
-  noStroke();
-  fill(210, 105, 30);
-  ellipse(width / 2, height / 2, 100, 100);
+  drawPlanet(color(210,105,30),100, width / 2, height / 2);
   
-
-  // Adiciona sombras para criar profundidade
-  for (int i = 0; i < 30; i++) {
-    fill(210 - i * 2, 105 - i, 30 - i / 2, 150 - i); // Gradiente de cor para sombra
-    ellipse(width / 2 - i / 10, height / 2 - i / 10, 100 - i, 100 - i);
-  }
-
-  // Adiciona manchas escuras
-  fill(139, 69, 19, 180); // Cor marrom escuro semi-transparente
-  ellipse(width / 2 - 20, height / 2 + 10, 20, 10);
-  ellipse(width / 2 + 15, height / 2 - 20, 15, 8);
-  ellipse(width / 2 - 10, height / 2 - 30, 25, 12);
-
-  // Adiciona pequenos pontos brilhantes
-  fill(255, 255, 255, 200); // Cor branca semi-transparente
-  ellipse(width / 2 + 5, height / 2 + 15, 5, 5);
-  ellipse(width / 2 - 15, height / 2 - 10, 4, 4);
-  ellipse(width / 2 + 10, height / 2 - 5, 3, 3);
-
   float x = width / 2 + cos(angle) * orbitRadius;
   float y = height / 2 + sin(angle) * orbitRadius;
-
+  
   pushMatrix();
   translate(x, y);
   rotate(atan2(height / 2 - y, width / 2 - x));
   
-  // Área do foguete
+   // Área do foguete
   fill(255);
   stroke(255);
   ellipse(0, 0, 80 * tamanho, 150 * tamanho);
   
-  stroke(0);
-  
-  // Janela
-  fill(105, 208, 247);
-  ellipse(0, -19 * tamanho, 28 * tamanho, 25 * tamanho);
-  
-  // Propulsores
-  fill(121,121,121);
-  rect(-35 * tamanho, 8 * tamanho, 70 * tamanho, 10 * tamanho);
-  
-  beginShape();
-  vertex(-5 * tamanho, 26 * tamanho);
-  vertex(5 * tamanho, 26 * tamanho);
-  vertex(15 * tamanho, 36 * tamanho);
-  vertex(-15 * tamanho, 36 * tamanho);
-  endShape(CLOSE);
-  
-  // Asas da nave
-  fill(255, 0, 0);
-  beginShape();
-  vertex(-22 * tamanho, -10 * tamanho);
-  vertex(-48 * tamanho, 25 * tamanho);
-  vertex(-10 * tamanho, 2 * tamanho);
-  endShape(CLOSE);
-
-  beginShape();
-  vertex(22 * tamanho, -10 * tamanho);
-  vertex(48 * tamanho, 25 * tamanho);
-  vertex(10 * tamanho, 2 * tamanho);
-  endShape(CLOSE);
-  
-  rect(-12.5 * tamanho, 20 * tamanho, 25 * tamanho, 10 * tamanho);
-  
-  // Corpo da nave
-  fill(200);
-  ellipse(0, 0, 50 * tamanho, 50 * tamanho);
+  left_boost = right_boost = main_boost = true;
+  drawNave(0, 0, 0, color(255, 0, 0));
+  left_boost = right_boost = main_boost = false;
   
   popMatrix();
 
@@ -364,7 +309,11 @@ void drawPlanet(color mainColor, float size,float x,float y) {
   ellipse(x + size * 0.1, y - size * 0.05, size * 0.03, size * 0.03);
 }
   
-void drawNave(color details){
+void drawNave(float x, float y, float angle, color details) {
+  pushMatrix();
+  translate(x, y);
+  rotate(angle);
+
   stroke(0);
   
   // Janela
@@ -372,7 +321,7 @@ void drawNave(color details){
   ellipse(0, -19 * tamanho, 28 * tamanho, 25 * tamanho);
   
   // Propulsores
-  fill(121,121,121);
+  fill(121, 121, 121);
   rect(-35 * tamanho, 8 * tamanho, 70 * tamanho, 10 * tamanho);
   
   beginShape();
@@ -402,6 +351,8 @@ void drawNave(color details){
   if (right_boost) triangle(35 * tamanho, 18 * tamanho, 30 * tamanho, 35 * tamanho, 25 * tamanho, 18 * tamanho);
   
   if (main_boost) triangle(-5 * tamanho, 36 * tamanho, 0 * tamanho, 55 * tamanho, 5 * tamanho, 36 * tamanho);
+  
+  popMatrix();
 }
 
 void drawFuelBar(float fuel){
