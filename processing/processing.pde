@@ -310,8 +310,17 @@ void drawGame() {
       }
     }
   }
+  if (receivedData.equals("collision_detected")){
+    errorText = "PERDESTES AHAHAHAHHAHAHAHAHHA";
+    activeScreen = "ERROR_POPUP";
+  }
+  if (receivedData.equals("win")){
+    println("GANHEI");
+    errorText = "GANHASTES :o";
+    activeScreen = "ERROR_POPUP";
+  }
   if(receivedData.equals("Error")){
     activeScreen = "ERROR_POPUP";
-    println("ERROR");
+    println("ERROR_POPUP");
   }
 }

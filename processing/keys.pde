@@ -271,17 +271,17 @@ void keyReleased() {
     if (keyCode == UP || key == 'w' || key == 'W') {
       println("Socket lançado: 40");
       main_boost = false;
-      socket.write("40");
+      socket.write("42");
     }
     if (keyCode == LEFT || key == 'a' || key == 'A') {
       println("Socket lançado: 41");
       left_boost = false;
-      socket.write("41");
+      socket.write("40");
     }
     if (keyCode == RIGHT || key == 'd' || key == 'D') {
       println("Socket lançado: 42");
       right_boost = false;
-      socket.write("42");
+      socket.write("41");
     }
   }
 }
