@@ -50,7 +50,6 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 		user(Sock,Mode,null,null);
 	{tcp, _, Data} when Mode =:= 2 ->
 		%Quando está a jogar
-		io:format("~p\n",[Data]),
 		case Data of
 			<<"30">> -> %Purpulsor da esquerda premido
 				PidJogador ! purp_esquerdo_pressionado,
@@ -77,11 +76,11 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 		io:format("~p\n",[Data]),
 		case string:split(binary_to_list(Data), " ",all) of
 			%Quando está Logged in	
-			["00", _, _] -> %Login Protocol Code - 00
+			["00", _, _] -> %Login Protocol Error Code - 00
 				io:format("Sent Login Failure"),
 				gen_tcp:send(Sock,"Error 00"),
 				user(Sock,0,null,null);
-			["02", _, _] -> %Register Protocol Code - 02
+			["02", _, _] -> %Register Protocol Error Code - 02
 				io:format("Sent CreateAccount Failure"),
 				gen_tcp:send(Sock,"Error 01"),
 				user(Sock,0,null,null);
@@ -197,8 +196,15 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 				end
 		end;
 	{tcp_closed, _} when Mode =:= 2->
-		PidPartida ! {disconnected,Sock,PidJogador},
-		io:format("Utilizador desconectado\n");
+		case {Mode, PidPartida} of
+        {2, Pid} when is_pid(Pid) ->
+            Pid ! {disconnected, Sock, PidJogador},
+            io:format("Utilizador desconectado\n");
+        {2, _} ->
+            io:format("Utilizador desconectado\n");
+        _ ->
+            io:format("Utilizador desconectado\n")
+		end;
 	{tcp_closed, _}->
 		io:format("Utilizador desconectado\n");
 	{tcp_error, _, _} ->
