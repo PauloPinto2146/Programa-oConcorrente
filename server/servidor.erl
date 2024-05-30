@@ -162,6 +162,8 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 	{tcp, _, Data} when Mode =:= 0 ->
 		io:format("~p\n",[Data]),
 		case string:split(binary_to_list(Data), " ",all) of
+			["10", _Username] ->
+				user(Sock,0,null,null);
 			["00", Username, Password] -> %Login Protocol Code - 00
 				case get_level(Username) of
 					{Username,Level} ->
