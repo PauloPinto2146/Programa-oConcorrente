@@ -97,6 +97,10 @@ void draw() {
     drawLoadingScreen();
   } else if (activeScreen == "GAME"){
     drawGame();
+  } else if (activeScreen == "LOSE"){
+    drawLossScreen();
+  } else if(activeScreen == "WIN"){
+    drawWinScreen();
   }
 }
 
@@ -190,7 +194,7 @@ void drawGame() {
     // {Combustivel4,Angulo4,velocidade4,aceleração4,Pid4,P4X,P4Y}]
     if(resultList.size() == 14){
       combustivel1 = resultList.remove(0);
-      angulo1 = resultList.remove(0);
+      angulo1 = 90 - resultList.remove(0);
       velocidade1p = resultList.remove(0);
       acceleration1 = resultList.remove(0);
       resultList.remove(0);
@@ -198,22 +202,15 @@ void drawGame() {
       p1y = resultList.remove(0);
       
       combustivel2 = resultList.remove(0);
-      angulo2 = resultList.remove(0);
+      angulo2 = 90 - resultList.remove(0);
       velocidade2p = resultList.remove(0);
       acceleration2 = resultList.remove(0);
       resultList.remove(0);
       p2x = resultList.remove(0);
       p2y = resultList.remove(0);
-      
-      /*
-      p1x += (cos(angulo1)*velocidade1) - 0.5;
-      p2x += (cos(angulo2)*velocidade2) - 0.5;
-      p1y += (sin(angulo1)*velocidade1) - 0.5;
-      p2y += (sin(angulo2)*velocidade2) - 0.5;
-      */
-      
-      drawNave(p1x,p1y,angulo1,color(0,0,255));
-      drawNave(p2x,p2y,angulo1,color(255,0,0));
+
+      drawNave(p1x,p1y,angulo1,0.7,color(0,0,255));
+      drawNave(p2x,p2y,angulo2,0.7,color(255,0,0));
       
       switch(numJogador){
         case 1:
@@ -224,32 +221,25 @@ void drawGame() {
     }
     if(resultList.size() == 21){
       combustivel1 = resultList.remove(0);
-      angulo1 = resultList.remove(0);
+      angulo1 = 90 - resultList.remove(0);
       velocidade1p = resultList.remove(0);
       acceleration1 = resultList.remove(0);
       resultList.remove(0);resultList.remove(0);resultList.remove(0);
       
       combustivel2 = resultList.remove(0);
-      angulo2 = resultList.remove(0);
+      angulo2 = 90 - resultList.remove(0);
       velocidade2p = resultList.remove(0);
       acceleration2 = resultList.remove(0);
       resultList.remove(0);resultList.remove(0);resultList.remove(0);
       
       combustivel3 = resultList.remove(0);
-      angulo3 = resultList.remove(0);
+      angulo3 = 90 - resultList.remove(0);
       velocidade3p = resultList.remove(0);
       acceleration3 = resultList.remove(0);
       
-      p1x += (cos(angulo1)*velocidade1) - 0.5;
-      p2x += (cos(angulo2)*velocidade2) - 0.5;
-      p3x += (cos(angulo3)*velocidade3) - 0.5;
-      p1y += (sin(angulo1)*velocidade1) - 0.5;
-      p2y += (sin(angulo2)*velocidade2) - 0.5;
-      p3y += (sin(angulo3)*velocidade3) - 0.5;
-      
-      drawNave(p1x,p1y,angulo1,color(0,0,255));
-      drawNave(p2x,p2y,angulo1,color(255,0,0));
-      drawNave(p3x,p3y,angulo3,color(0,255,0));
+      drawNave(p1x,p1y,angulo1,50,color(0,0,255));
+      drawNave(p2x,p2y,angulo1,50,color(255,0,0));
+      drawNave(p3x,p3y,angulo3,50,color(0,255,0));
       
       switch(numJogador){
         case 1:
@@ -260,43 +250,42 @@ void drawGame() {
           drawFuelBar(combustivel3);
       }
     }
-    if(resultList.size() == 20){
+    if(resultList.size() == 28){
       combustivel1 = resultList.remove(0);
-      angulo1 = resultList.remove(0);
+      angulo1 = 90 - resultList.remove(0);
       velocidade1p = resultList.remove(0);
       acceleration1 = resultList.remove(0);
-      resultList.remove(0);resultList.remove(0);resultList.remove(0);
+      resultList.remove(0);resultList.remove(0);
+      p1x = resultList.remove(0);
+      p1y = resultList.remove(0);
       
       combustivel2 = resultList.remove(0);
-      angulo2 = resultList.remove(0);
+      angulo2 = 90 - resultList.remove(0);
       velocidade2p = resultList.remove(0);
       acceleration2 = resultList.remove(0);
-      resultList.remove(0);resultList.remove(0);resultList.remove(0);
+      resultList.remove(0);resultList.remove(0);
+      p2x = resultList.remove(0);
+      p2y = resultList.remove(0);
       
       combustivel3 = resultList.remove(0);
-      angulo3 = resultList.remove(0);
+      angulo3 = 90 - resultList.remove(0);
       velocidade3p = resultList.remove(0);
       acceleration3 = resultList.remove(0);
-      resultList.remove(0);resultList.remove(0);resultList.remove(0);
+      resultList.remove(0);resultList.remove(0);
+      p3x = resultList.remove(0);
+      p3y = resultList.remove(0);
       
       combustivel4 = resultList.remove(0);
-      angulo4 = resultList.remove(0);
+      angulo4 = 90 - resultList.remove(0);
       velocidade4p = resultList.remove(0);
-      acceleration4 = resultList.remove(0);
-      
-      p1x += (cos(angulo1)*velocidade1) - 0.5;
-      p2x += (cos(angulo2)*velocidade2) - 0.5;
-      p3x += (cos(angulo3)*velocidade3) - 0.5;
-      p4x += (cos(angulo4)*velocidade4) - 0.5;
-      p1y += (sin(angulo1)*velocidade1) - 0.5;
-      p2y += (sin(angulo2)*velocidade2) - 0.5;
-      p3y += (sin(angulo3)*velocidade3) - 0.5;
-      p4y += (sin(angulo4)*velocidade4) - 0.5;
-      
-      drawNave(p1x,p1y,angulo1,color(0,0,255));
-      drawNave(p2x,p2y,angulo1,color(255,0,0));
-      drawNave(p3x,p3y,angulo3,color(0,255,0));
-      drawNave(p4x,p4y,angulo4,color(255,255,0));
+      acceleration4 = resultList.remove(0);resultList.remove(0);
+      p4x = resultList.remove(0);
+      p4y = resultList.remove(0);
+
+      drawNave(p1x,p1y,angulo1,50,color(0,0,255));
+      drawNave(p2x,p2y,angulo1,50,color(255,0,0));
+      drawNave(p3x,p3y,angulo3,50,color(0,255,0));
+      drawNave(p4x,p4y,angulo4,50,color(255,255,0));
       
       switch(numJogador){
         case 1:
@@ -310,17 +299,18 @@ void drawGame() {
       }
     }
   }
-  if (receivedData.equals("collision_detected")){
-    errorText = "PERDESTES AHAHAHAHHAHAHAHAHHA";
-    activeScreen = "ERROR_POPUP";
+  if (receivedData.endsWith("lost")){
+    println("Recebi Collision Detected");
+    activeScreen = "LOSE";
   }
-  if (receivedData.equals("win")){
+  else if (receivedData.equals("win")){
     println("GANHEI");
-    errorText = "GANHASTES :o";
-    activeScreen = "ERROR_POPUP";
+    activeScreen = "WIN";
   }
-  if(receivedData.equals("Error")){
+  else if(receivedData.equals("Error")){
     activeScreen = "ERROR_POPUP";
     println("ERROR_POPUP");
+  }else{
+    println("Unknown Data received: "+receivedData);
   }
 }

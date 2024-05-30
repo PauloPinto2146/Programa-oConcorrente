@@ -85,17 +85,14 @@ void keyPressed() {
     }
   } else if (activeScreen.equals("GAME")) {
     if (keyCode == UP || key == 'w' || key == 'W') {
-      println("Socket lançado: 32");
       main_boost = true;
       socket.write("32");
     }
     if (keyCode == LEFT || key == 'a' || key == 'A') {
-      println("Socket lançado: 30");
       left_boost = true;
       socket.write("30");
     }
     if (keyCode == RIGHT || key == 'd' || key == 'D') {
-      println("Socket lançado: 31");
       right_boost = true;
       socket.write("31");
     }
@@ -269,17 +266,14 @@ void keyReleased() {
     }
   } else if (activeScreen.equals("GAME")) {
     if (keyCode == UP || key == 'w' || key == 'W') {
-      println("Socket lançado: 40");
       main_boost = false;
       socket.write("42");
     }
     if (keyCode == LEFT || key == 'a' || key == 'A') {
-      println("Socket lançado: 41");
       left_boost = false;
       socket.write("40");
     }
     if (keyCode == RIGHT || key == 'd' || key == 'D') {
-      println("Socket lançado: 42");
       right_boost = false;
       socket.write("41");
     }

@@ -10,6 +10,30 @@ void drawReturnMessage(int w, int h, int px, int py){
   text("Press BACKSPACE to return", px, py + h - 35, w, 40);
 }
 
+void drawTitle(String title, color c, float x, float y, float size) {
+  textAlign(CENTER, CENTER);
+  textSize(size);
+
+  // Back layer
+  color backLayerColor = lerpColor(c, color(0), 0.5);
+  fill(backLayerColor);
+  text(title, x + 4, y + 4);
+
+  // Middle layer 
+  color middleLayerColor = lerpColor(c, color(0), 0.25);
+  fill(middleLayerColor);
+  text(title, x + 2, y + 2);
+
+  // Top layer
+  fill(c);
+  text(title, x, y);
+
+  // Highlight layer 
+  color highlightColor = lerpColor(c, color(255), 0.3);
+  fill(highlightColor);
+  text(title, x - 2, y - 2);
+}
+
 void drawMenu() {
   int popupWidth = 600, popupHeight = 400;
   int popupX = width / 2 - popupWidth / 2;
@@ -19,10 +43,7 @@ void drawMenu() {
   drawPopupWindow(popupWidth, popupHeight, popupX, popupY);
   
   // Draw title
-  textAlign(CENTER, CENTER);
-  textSize(48);
-  fill(blue); // Blue color
-  text("The Game", width / 2, height / 4 + 25);
+  drawTitle("The Game", blue, width / 2, height / 4 + 25, 48);
 
   // Calculate the y-position for the first button
   int startY = height / 2 - buttonHeight;
@@ -94,10 +115,7 @@ void drawLobby(){
   drawPopupWindow(popupWidth, popupHeight, popupX, popupY);
   
   // Draw title
-  textAlign(CENTER, CENTER);
-  textSize(48);
-  fill(blue);
-  text("Welcome, " + popupUsername + "!", width / 2, height / 4 + 25);
+  drawTitle("Welcome, " + popupUsername + "!", blue, width / 2, height / 4 + 25, 48);
   textSize(24);
   fill(0,0,0);
   text("You are level " + curr_level + "!", width / 2, height / 4 +75);
@@ -191,10 +209,10 @@ void drawLoadingScreen() {
    // Área do foguete
   fill(255);
   stroke(255);
-  ellipse(0, 0, 80 * tamanho, 150 * tamanho);
+  ellipse(0, 0, 80 * 0.7, 150 * 0.7);
   
   left_boost = right_boost = main_boost = true;
-  drawNave(0, 0, 0, color(255, 0, 0));
+  drawNave(0, 0, 0, 0.7, color(255, 0, 0));
   left_boost = right_boost = main_boost = false;
   
   popMatrix();
@@ -309,10 +327,11 @@ void drawPlanet(color mainColor, float size,float x,float y) {
   ellipse(x + size * 0.1, y - size * 0.05, size * 0.03, size * 0.03);
 }
   
-void drawNave(float x, float y, float angle, color details) {
+void drawNave(float x, float y, float angle, float tamanho, color details) {
   pushMatrix();
   translate(x, y);
-  rotate(angle);
+  rotate(radians(angle));
+  // Rotate roda consoante o referencial do processing
 
   stroke(0);
   
@@ -382,4 +401,99 @@ void drawFuelBar(float fuel){
   text("FUEL", 0, 0); 
   
   popMatrix();
+}
+
+void drawLossScreen() {
+  backgroundStars();
+
+  // Draw popup window
+  int popupWidth = 600;
+  int popupHeight = 350;
+  int popupX = width / 2 - popupWidth / 2;
+  int popupY = height / 2 - popupHeight / 2;
+  drawPopupWindow(popupWidth, popupHeight, popupX, popupY);
+
+  // Draw title
+  drawTitle("You Lost!", color(255,0,0), popupX + popupWidth/2,popupY + 30, 48);
+
+  // Draw planet and details
+  clip(popupX, popupY, popupWidth, popupHeight - 20);
+  drawPlanet(color(210, 105, 30), 1500, width / 2, height / 2 + 800);
+  
+  fill(139, 69, 19, 200);
+  ellipse(width / 2 - 100, height / 2 + 100, 50, 25);
+  ellipse(width / 2 + 120, height / 2 + 120, 70, 35);
+  fill(255, 255, 255, 200);
+  ellipse(width / 2 + 80, height / 2 + 90, 10, 10);
+  ellipse(width / 2 - 170, height / 2 + 140, 8, 8);
+  noClip();
+  
+  // Draw smoke
+  fill(50, 120);
+  ellipse(width / 2 - 12, height / 2 - 10, 40, 50);
+  fill(130, 180);
+  ellipse(width / 2 - 30, height / 2 - 30, 45, 40);
+  fill(170, 200);
+  ellipse(width / 2 - 7, height / 2 - 62, 25, 40);
+  fill(200, 250);
+  ellipse(width / 2 - 35, height / 2 - 75, 10, 10);
+  fill(200, 200);
+  ellipse(width / 2 - 15, height / 2 - 90, 10, 10);
+  
+  drawNave(width / 2, height / 2 + 35, 130, 1, color(255, 0, 0));
+  
+  // Draw crater
+  stroke(139, 69, 19);
+  fill(150, 75, 15);
+  ellipse(width / 2 + 30, height / 2 + 50, 40, 30);
+  ellipse(width / 2 - 37, height / 2 + 50, 35, 20);
+  ellipse(width / 2 - 25, height / 2 + 55, 25, 20);
+  ellipse(width / 2 - 2, height / 2 + 55, 40, 20);
+  ellipse(width / 2 + 20, height / 2 + 60, 25, 20);
+  ellipse(width / 2 + 50, height / 2 + 55, 25, 15);
+
+  stroke(150, 75, 15);
+  fill(150, 75, 15);
+  rect(width / 2 - popupX - 60, height / 2 + popupY - 31, popupWidth - 1, 20, 0, 0, 50, 50);
+  
+  drawReturnMessage(popupWidth, popupHeight / 2 - 90, popupX, popupY);
+}
+
+void drawWinScreen(){
+  backgroundStars();
+
+  // Draw popup window
+  int popupWidth = 600;
+  int popupHeight = 350;
+  int popupX = width / 2 - popupWidth / 2;
+  int popupY = height / 2 - popupHeight / 2;
+  drawPopupWindow(popupWidth, popupHeight, popupX, popupY);
+
+  // Draw title
+  drawTitle("You Won!", color(0,255,0), popupX + popupWidth/2,popupY + 30, 48);
+  
+  // Draw planet and details
+  clip(popupX, popupY, popupWidth, popupHeight - 20);
+  drawPlanet(color(210, 105, 30), 1500, width / 2, height / 2 + 800);
+  
+  fill(139, 69, 19, 200);
+  ellipse(width / 2 - 100, height / 2 + 100, 50, 25);
+  ellipse(width / 2 + 120, height / 2 + 120, 70, 35);
+  fill(255, 255, 255, 200);
+  ellipse(width / 2 + 80, height / 2 + 90, 10, 10);
+  ellipse(width / 2 - 170, height / 2 + 140, 8, 8);
+  noClip();
+  
+  left_boost = right_boost = main_boost = true;
+  drawNave(width / 2 + 80, height / 2 - 30, 75, 1, color(255, 0, 0));
+  left_boost = right_boost = main_boost = false;
+  line(width / 2 + 40, height / 2 + 10, width / 2 - 30, height / 2 + 30);
+  line(width / 2 + 10, height / 2 - 13, width / 2 - 60, height / 2 + 7);
+  line(width / 2 + 30, height / 2 - 50, width / 2 - 40, height / 2 - 30);
+  
+  stroke(150, 75, 15);
+  fill(150, 75, 15);
+  rect(width / 2 - popupX - 60, height / 2 + popupY - 31, popupWidth - 1, 20, 0, 0, 50, 50);
+  
+  drawReturnMessage(popupWidth, popupHeight / 2 - 90, popupX, popupY);
 }
