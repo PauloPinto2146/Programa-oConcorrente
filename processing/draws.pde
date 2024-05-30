@@ -440,7 +440,14 @@ void drawLossScreen() {
   fill(200, 200);
   ellipse(width / 2 - 15, height / 2 - 90, 10, 10);
   
-  drawNave(width / 2, height / 2 + 35, 130, 1, color(255, 0, 0));
+  if (numJogador == 1) 
+    drawNave(width / 2, height / 2 + 35, 130, 1, color(0, 0, 255));
+  else if (numJogador == 2)
+    drawNave(width / 2, height / 2 + 35, 130, 1,color(255, 0, 0));
+   else if (numJogador == 2)
+    drawNave(width / 2, height / 2 + 35, 130, 1, color(0, 255, 0));
+   else if (numJogador == 2)
+    drawNave(width / 2, height / 2 + 35, 130, 1, color(255, 255, 0));
   
   // Draw crater
   stroke(139, 69, 19);
@@ -485,7 +492,14 @@ void drawWinScreen(){
   noClip();
   
   left_boost = right_boost = main_boost = true;
-  drawNave(width / 2 + 80, height / 2 - 30, 75, 1, color(255, 0, 0));
+  if (numJogador == 1) 
+    drawNave(width / 2 + 80, height / 2 - 30, 75, 1, color(0, 0, 255));
+  else if (numJogador == 2)
+    drawNave(width / 2 + 80, height / 2 - 30, 75, 1, color(255, 0, 0));
+   else if (numJogador == 2)
+    drawNave(width / 2 + 80, height / 2 - 30, 75, 1, color(0, 255, 0));
+   else if (numJogador == 2)
+    drawNave(width / 2 + 80, height / 2 - 30, 75, 1, color(255, 255, 0));
   left_boost = right_boost = main_boost = false;
   line(width / 2 + 40, height / 2 + 10, width / 2 - 30, height / 2 + 30);
   line(width / 2 + 10, height / 2 - 13, width / 2 - 60, height / 2 + 7);

@@ -303,14 +303,12 @@ void drawGame() {
     println("Recebi Collision Detected");
     activeScreen = "LOSE";
   }
-  else if (receivedData.equals("win")){
+  else if (receivedData.endsWith("win") || receivedData.startsWith("win")){
     println("GANHEI");
     activeScreen = "WIN";
   }
   else if(receivedData.equals("Error")){
     activeScreen = "ERROR_POPUP";
     println("ERROR_POPUP");
-  }else{
-    println("Unknown Data received: "+receivedData);
   }
 }

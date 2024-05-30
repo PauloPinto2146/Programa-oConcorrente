@@ -84,18 +84,24 @@ void keyPressed() {
       activeScreen = prevMenu;
     }
   } else if (activeScreen.equals("GAME")) {
-    if (keyCode == UP || key == 'w' || key == 'W') {
-      main_boost = true;
-      socket.write("32");
-    }
-    if (keyCode == LEFT || key == 'a' || key == 'A') {
-      left_boost = true;
-      socket.write("30");
-    }
-    if (keyCode == RIGHT || key == 'd' || key == 'D') {
-      right_boost = true;
-      socket.write("31");
-    }
+      if (keyCode == UP || key == 'w' || key == 'W') {
+        main_boost = true;
+        socket.write("32");
+      }
+      if (keyCode == LEFT || key == 'a' || key == 'A') {
+        left_boost = true;
+        socket.write("30");
+      }
+      if (keyCode == RIGHT || key == 'd' || key == 'D') {
+        right_boost = true;
+        socket.write("31");
+      }
+  } else if (activeScreen.equals("WIN")) {
+    if (key == BACKSPACE)
+      activeScreen ="LOBBY";
+  }else if (activeScreen.equals("LOSE")) {
+    if (key == BACKSPACE)
+      activeScreen ="LOBBY";
   }
 }
 
