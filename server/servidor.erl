@@ -13,6 +13,7 @@ compile() ->
     lists:foreach(fun(M) -> compile:file(M) end, Modules).
 
 server() ->
+	register(servidor,self()),
 	compile(),
 	io:format("Compiled\n"),
 	startLoginManager(),
@@ -37,16 +38,12 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 	receive
 	{partida_pid,NewPidPartida, NewPidJogador}->
 		user(Sock,2,NewPidJogador,NewPidPartida);
-	{lose_game,Username,_}->  %Lose game Protocol Code - 21
-		io:format("~p lost the game\n",[Username]),
-		io:format("Lancado Socket 21\n"),
-		gen_tcp:send("21"),
+	{lose_game_server,_Username,_Socket}->  %Lose game Protocol Code - 21
+		gen_tcp:send(Sock,"lost"),
+		io:format("Lancado Socket lost ao socket ~p\n",[Sock]),
 		user(Sock,1,null,null);
 	{line, Data} ->
 		gen_tcp:send(Sock, Data),
-		%Lança para Java o Socket que tem que ser processado onde pode ter informação sobre o que quer fazer
-		%O Java processa e lança novamente o Socket da função que quer fazer do Erlang
-		%segundo codigos de protocolo
 		user(Sock,Mode,null,null);
 	{tcp, _, Data} when Mode =:= 2 ->
 		%Quando está a jogar
@@ -73,8 +70,19 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 				user(Sock,2,PidJogador,PidPartida)
 		end;
 	{tcp, _, Data} when Mode =:= 1 ->
-		io:format("~p\n",[Data]),
 		case string:split(binary_to_list(Data), " ",all) of
+			["30"]->
+				user(Sock,1,null,null);
+			["31"]->
+				user(Sock,1,null,null);
+			["32"]->
+				user(Sock,1,null,null);
+			["40"]->
+				user(Sock,1,null,null);
+			["41"]->
+				user(Sock,1,null,null);
+			["42"]->
+				user(Sock,1,null,null);
 			%Quando está Logged in	
 			["00", _, _] -> %Login Protocol Error Code - 00
 				io:format("Sent Login Failure"),
@@ -147,6 +155,8 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 			io:format("Recebido Socket 20\n"),
 				win_game(Username),
 				io:format("~p won the game\n",[Username]),
+				user(Sock,1,null,null);
+			_ ->
 				user(Sock,1,null,null)
 		end;
 	{tcp, _, Data} when Mode =:= 0 ->

@@ -13,7 +13,7 @@ get_player_by_Pid/2,
 check_collision/2,
 check_collision_for_player/3,
 get_Sockets/1]).
--import(level_system, [lose_game/2,win_game/2]).
+-import(level_system, [lose_game/1,win_game/2]).
 -import(jogador, [startJogador/0]).
 
 startGame(PlayerMap) -> 
@@ -30,7 +30,7 @@ startGame(PlayerMap) ->
             [Socket1,From1] = SocketFrom1,
             [Socket2,From2] = SocketFrom2,
             PlayersMap = #{{Username1,Socket1,From1} => PlayerValue1, {Username2,Socket2,From2} => PlayerValue2},
-            PidPartida = register(?MODULE,spawn(fun() -> loop(PlayersMap,PlanetasMap) end)),
+            PidPartida = spawn(fun() -> loop(PlayersMap,PlanetasMap) end),
             From1 ! {partida_pid,PidPartida, Pid1},
             From2 ! {partida_pid,PidPartida, Pid2};
         3 ->
@@ -97,10 +97,10 @@ geraValoresPlayers(Number)->
     Acel2 = 0,
     Acel3 = 0,
     Acel4 = 0,
-    Angle1 = math:atan2(360 - Posicao1Y, 560 - Posicao1X),
-    Angle2 = math:atan2(360 - Posicao2Y, 560 - Posicao2X),
-    Angle3 = math:atan2(360 - Posicao3Y, 560 - Posicao3X),
-    Angle4 = math:atan2(360 - Posicao4Y, 560 - Posicao4X),
+    Angle1 = math:atan2(360 - Posicao1Y, 540 - Posicao1X),
+    Angle2 = math:atan2(360 - Posicao2Y, 540 - Posicao2X),
+    Angle3 = math:atan2(360 - Posicao3Y, 540 - Posicao3X),
+    Angle4 = math:atan2(360 - Posicao4Y, 540 - Posicao4X),
     case Number of
         2->
             Pid1 = startJogador(),
@@ -154,30 +154,45 @@ alteraPosicaoPlayer({Combustivel,Angulo,Velocidade,Aceleracao,Pid,PosicaoX,Posic
     %Aceleração ou constante ou 0
     if 
         Velocidade > 0 ->
-            NewVelocidade = Velocidade - 0.01;
+            NewVelocidade = Velocidade - 0.05;
         Velocidade =< 0 ->
             NewVelocidade = Velocidade
     end,
     if 
         Aceleracao > 0 ->
-            NewAceleracao = Aceleracao - 1/10;
+            NewAceleracao = Aceleracao - 0.015;
         Aceleracao =< 0 ->
             NewAceleracao = Aceleracao
     end,
-    if 
-        PosicaoX >= 560 andalso PosicaoY >= 360 ->
-            NewPosicaoX = PosicaoX - 0.4,
-            NewPosicaoY = PosicaoY - 0.17;
-        PosicaoX >= 560 andalso PosicaoY =< 360 ->
-            NewPosicaoX = PosicaoX - 0.4,
-            NewPosicaoY = PosicaoY + 0.17;
-        PosicaoX =< 560 andalso PosicaoY >= 360 ->
-            NewPosicaoX = PosicaoX + 0.4,
-            NewPosicaoY = PosicaoY - 0.17;
-        PosicaoX =< 560 andalso PosicaoY =< 360 ->
-            NewPosicaoX = PosicaoX + 0.4,
-            NewPosicaoY = PosicaoY + 0.17
-    end,
+    {TempPosicaoX, TempPosicaoY} =
+        if 
+            PosicaoX >= 540 andalso PosicaoY >= 360 ->
+                {PosicaoX - 0.35, PosicaoY - 0.17};
+            PosicaoX >= 540 andalso PosicaoY =< 360 ->
+                {PosicaoX - 0.35, PosicaoY + 0.17};
+            PosicaoX =< 540 andalso PosicaoY >= 360 ->
+                {PosicaoX + 0.35, PosicaoY - 0.17};
+            true -> % PosicaoX =< 560 andalso PosicaoY =< 360
+                {PosicaoX + 0.35, PosicaoY + 0.17}
+        end,
+    NewPosicaoX = 
+        if 
+            TempPosicaoX >= 1080 ->
+                1080;
+            TempPosicaoX =< 0 ->
+                0;
+            true ->
+                TempPosicaoX
+        end,
+    NewPosicaoY = 
+        if 
+            TempPosicaoY >= 720 ->
+                720;
+            TempPosicaoY =< 0 ->
+                0;
+            true ->
+                TempPosicaoY
+        end,
     {Combustivel,Angulo,NewVelocidade,NewAceleracao,Pid,NewPosicaoX,NewPosicaoY}.
     
 newPosicaoPlayers(PlayersMap)->
@@ -206,12 +221,12 @@ get_player_by_Pid(Pid, [_Head | Tail]) ->
 get_player_by_Pid(_Pid, []) ->
     undefined.
 
-get_player_by_socket(Socket, [{Player, Socket,_} | _Tail]) ->
-        Player;
+get_player_by_socket(Socket, [{Player, Socket,Pid} | _Tail]) ->
+    {Player, Socket,Pid};
 get_player_by_socket(Socket, [_Head | Tail]) ->
-        get_player_by_socket(Socket, Tail);
+    get_player_by_socket(Socket, Tail);
 get_player_by_socket(_Socket, []) ->
-        undefined.
+    undefined.
 
 atualiza_com_keys(_,Value)->
     {Combustivel,Angulo,Velocidade,Aceleracao,Pid,PosicaoX,PosicaoY} = Value,
@@ -222,13 +237,13 @@ atualiza_com_keys(_,Value)->
             Dir = maps:get("DIREITO",Keys),
             Centr = maps:get("CENTRAL",Keys),
                 {
-                    Combustivel-((Esq+Dir+Centr)* 0.05),
-                    Angulo + ((Esq-Dir)*0.05),
-                    Velocidade + Aceleracao,
-                    Aceleracao + (Centr*0.03),
+                    Combustivel-((Esq+Dir+Centr)* 0.08),
+                    Angulo + ((Esq-Dir)*2),
+                    Velocidade + (Centr*0.1),
+                    Aceleracao,
                     Pid, 
-                    PosicaoX + (math:cos(Angulo)*Velocidade),
-                    PosicaoY + (math:sin(Angulo)*Velocidade)
+                    PosicaoX + (math:cos(Angulo*(math:pi()/180))*Velocidade),
+                    PosicaoY - (math:sin(Angulo*(math:pi()/180))*Velocidade)
                 }
     end.
 
@@ -257,11 +272,9 @@ check_collision_for_player(Player, Valor, [Planet | Rest]) ->
     XC = 540 + math:cos(Angulo) * DistSol,
     YC = 360 + math:sin(Angulo) * DistSol,
     case within_radius(X,Y,XC,YC, Raio) or within_radius(X,Y,590,360,75) of
-        true -> 
-            {_Username,Socket,_Pid} = Player,
-            io:format("Collision detected: ~p", [Player]),
-            ?MODULE ! {lost, Player},
-            gen_tcp:send(Socket,"collision_detected");
+        true ->
+            io:format("Collision detected: ~p\n", [Player]),
+            self() ! {lost, Player};
         false -> 
             ok
     end,
@@ -290,11 +303,14 @@ loop(PlayersMap,PlanetMap)->
         {disconnected,Sock,From}->
             Players = maps:keys(PlayersMap),
             Player = get_player_by_socket(Sock,Players),
-            lose_game(Player,From),
+            {Username,Socket,PidJogador} = Player,
+            lose_game(Username),
+            PidJogador ! {lose_game_server,Username,Socket},
             loop(maps:remove(Player,PlayersMap),PlanetMap);
         {lost, Player}->
-            {_,Socket,_}= Player,
-            lose_game(Player,Socket),
+            {Username,Socket,PidJogador}= Player,
+            lose_game(Username),
+            PidJogador ! {lose_game_server,Username,Socket},
             loop(maps:remove(Player,PlayersMap),PlanetMap)
     after 40 -> %tps = 25
         %Players = maps:keys(PlayersMap),
@@ -305,9 +321,14 @@ loop(PlayersMap,PlanetMap)->
                     [{Player,Socket,From}] = maps:keys(NewPlayerMap),
                     receive
                         after 5000 ->
-                            io:format("Sent win socket to ~p",[Player]),
-                            gen_tcp:send(Socket,"win"),
-                            win_game(Player,From)
+                            io:format("Sent win socket to ~p\n",[Player]),
+                            case maps:size(NewPlayerMap) of 
+                                1 -> 
+                                    gen_tcp:send(Socket,"win"),
+                                    win_game(Player,From);
+                                _ ->
+                                    From ! {lost, Player}
+                        end
                     end,
                     loop(newPosicaoPlayers(NewPlayerMap), newPosicaoPlanetas(PlanetMap));
                 _ ->

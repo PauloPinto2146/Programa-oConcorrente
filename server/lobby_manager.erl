@@ -115,7 +115,7 @@ lobby(LobbyMap)-> %Lobbies de jogadores
 								lobby(maps:remove(MaxMinLevel, LobbyMap));
 							_ ->
 								From ! {cancelled_find},
-								lobby(maps:update(MaxMinLevel, maps:remove(RemovedPlayer, PlayerMap), LobbyMap))
+								lobby(maps:put(MaxMinLevel, maps:remove(RemovedPlayer, PlayerMap), LobbyMap))
 						end;
 				_ ->
 					From ! {player_not_found,From},
@@ -133,12 +133,12 @@ lobby(LobbyMap)-> %Lobbies de jogadores
 							lobby(maps:remove(NewLevel, LobbyMap));
 						3 ->
 							erlang:send_after(5000, ?MODULE, {check_lobby_timeout, NewLevel, 3}),
-							lobby(maps:update(NewLevel, NewPlayerMap , LobbyMap));
+							lobby(maps:put(NewLevel, NewPlayerMap, LobbyMap));
 						2 ->
 							erlang:send_after(5000, ?MODULE, {check_lobby_timeout, NewLevel, 2}),
-							lobby(maps:update(NewLevel, NewPlayerMap, LobbyMap));
+							lobby(maps:put(NewLevel, NewPlayerMap, LobbyMap));
 						_ ->
-							lobby(maps:update(NewLevel, NewPlayerMap, LobbyMap))
+							lobby(maps:put(NewLevel, NewPlayerMap, LobbyMap))
 					end;
 				error ->
 						From ! {first_in_lobby, ?MODULE},

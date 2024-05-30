@@ -5,7 +5,7 @@
 		print_top_players/2,
 		map_tolist_level/1,
 		win_game/2,
-		lose_game/2,
+		lose_game/1,
 		get_level/1,
 		loop/1]).
 
@@ -33,12 +33,11 @@ win_game(Username,From)-> %Quando ganha jogo precisa atualizar
 		{won_game,?MODULE} -> io:format("YOU WIN! ~p",[From])
 	end.
 
-lose_game(Username,From)->
-	From ! {lose_game,Username,self()},
+lose_game(Username)->
 	?MODULE ! {lose_game,Username,self()},
 	receive
 		{Res,?MODULE} -> Res;
-		{lost_game,?MODULE} -> io:format("YOU LOST!~p",[From])
+		{lost_game,?MODULE} -> io:format("YOU LOST!~p",[Username])
 	end.
 
 top10()->
