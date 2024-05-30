@@ -192,6 +192,27 @@ void drawGame() {
     // {Combustivel2,Angulo2,velocidade2,aceleração2,Pid2,P2X,P2Y},
     // {Combustivel3,Angulo3,velocidade3,aceleração3,Pid3,P3X,P3Y},
     // {Combustivel4,Angulo4,velocidade4,aceleração4,Pid4,P4X,P4Y}]
+    if(resultList.size() == 7){
+      combustivel1 = resultList.remove(0);
+      angulo1 = 90 - resultList.remove(0);
+      velocidade1p = resultList.remove(0);
+      acceleration1 = resultList.remove(0);
+      resultList.remove(0);
+      p1x = resultList.remove(0);
+      p1y = resultList.remove(0);
+
+      if(numJogador == 1)
+        drawNave(p1x,p1y,angulo1,0.7,color(0,0,255));
+      else
+        drawNave(p1x,p1y,angulo1,0.7,color(255,0,0));
+      
+      switch(numJogador){
+        case 1:
+          drawFuelBar(combustivel1);
+        case 2:
+          drawFuelBar(combustivel2);
+      }
+    }
     if(resultList.size() == 14){
       combustivel1 = resultList.remove(0);
       angulo1 = 90 - resultList.remove(0);
@@ -208,7 +229,7 @@ void drawGame() {
       resultList.remove(0);
       p2x = resultList.remove(0);
       p2y = resultList.remove(0);
-
+      
       drawNave(p1x,p1y,angulo1,0.7,color(0,0,255));
       drawNave(p2x,p2y,angulo2,0.7,color(255,0,0));
       
