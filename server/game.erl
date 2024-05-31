@@ -27,8 +27,8 @@ startGame(PlayerMap) ->
             {Planeta1,Planeta2,Planeta3,Planeta4} = geraValoresPlanetas(),
             PlanetasMap = #{1 =>Planeta1,2 =>Planeta2,3 =>Planeta3,4 =>Planeta4},
             {PlayerValue1,PlayerValue2} = geraValoresPlayers(2),
-            {_,_,_,_,Pid1,_,_} = PlayerValue1,
-            {_,_,_,_,Pid2,_,_} = PlayerValue2,
+            {_,_,_,_,_,Pid1,_,_} = PlayerValue1,
+            {_,_,_,_,_,Pid2,_,_} = PlayerValue2,
             [Username1,Username2] = maps:keys(PlayerMap),
             [SocketFrom1,SocketFrom2] = maps:values(PlayerMap),
             [Socket1,From1] = SocketFrom1,
@@ -41,9 +41,9 @@ startGame(PlayerMap) ->
             {Planeta1,Planeta2,Planeta3,Planeta4} = geraValoresPlanetas(),
             PlanetasMap = #{1 =>Planeta1,2 =>Planeta2,3 =>Planeta3,4 =>Planeta4},
             {PlayerValue1,PlayerValue2,PlayerValue3} = geraValoresPlayers(3),
-            {_,_,_,_,Pid1,_,_} = PlayerValue1,
-            {_,_,_,_,Pid2,_,_} = PlayerValue2,
-            {_,_,_,_,Pid3,_,_} = PlayerValue3,
+            {_,_,_,_,_,Pid1,_,_} = PlayerValue1,
+            {_,_,_,_,_,Pid2,_,_} = PlayerValue2,
+            {_,_,_,_,_,Pid3,_,_} = PlayerValue3,
             [Username1,Username2,Username3] = maps:keys(PlayerMap),
             [SocketFrom1,SocketFrom2,SocketFrom3] = maps:values(PlayerMap),
             [Socket1,From1] = SocketFrom1,
@@ -59,10 +59,10 @@ startGame(PlayerMap) ->
             {Planeta1,Planeta2,Planeta3,Planeta4} = geraValoresPlanetas(),
             PlanetasMap = #{1 =>Planeta1,2 =>Planeta2,3 =>Planeta3,4 =>Planeta4}, 
             {PlayerValue1,PlayerValue2,PlayerValue3,PlayerValue4} = geraValoresPlayers(4),
-            {_,_,_,_,Pid1,_,_} = PlayerValue1,
-            {_,_,_,_,Pid2,_,_} = PlayerValue2,
-            {_,_,_,_,Pid3,_,_} = PlayerValue3,
-            {_,_,_,_,Pid4,_,_} = PlayerValue4,
+            {_,_,_,_,_,Pid1,_,_} = PlayerValue1,
+            {_,_,_,_,_,Pid2,_,_} = PlayerValue2,
+            {_,_,_,_,_,Pid3,_,_} = PlayerValue3,
+            {_,_,_,_,_,Pid4,_,_} = PlayerValue4,
             [Username1,Username2,Username3,Username4] = maps:keys(PlayerMap),
             [SocketFrom1,SocketFrom2,SocketFrom3,SocketFrom4] = maps:values(PlayerMap),
             [Socket1,From1] = SocketFrom1,
@@ -92,43 +92,35 @@ geraValoresPlayers(Number)->
     Posicao2Y = 670,
     Posicao3Y = 50,
     Posicao4Y = 670,
-
-    Velocidade1 = 0,
-    Velocidade2 = 0,
-    Velocidade3 = 0,
-    Velocidade4 = 0,
-    Acel1 = 0,
-    Acel2 = 0,
-    Acel3 = 0,
-    Acel4 = 0,
     Angle1 = -math:pi()/4,
     Angle2 = 3*math:pi()/4,
     Angle3 = -(3*math:pi()/4),
     Angle4 = math:pi()/4,
+    %{PlayerUsername,Socket,Pid} : {Combustivel,Angulo,velocidade,VeX,VeY,Pid,PosicaoX,PosicaoY} 
     case Number of
         2->
             Pid1 = startJogador(),
             Pid2 = startJogador(),
-            Player1 = {100,Angle1,Velocidade1,Acel1,Pid1,Posicao1X,Posicao1Y},
-            Player2 = {100,Angle2,Velocidade2,Acel2,Pid2,Posicao2X,Posicao2Y},
+            Player1 = {100,Angle1,0,0,0,Pid1,Posicao1X,Posicao1Y},
+            Player2 = {100,Angle2,0,0,0,Pid2,Posicao2X,Posicao2Y},
             {Player1,Player2};
         3->
             Pid1 = startJogador(),
             Pid2 = startJogador(),
             Pid3 = startJogador(),
-            Player1 = {100,Angle1,Velocidade1,Acel1,Pid1,Posicao1X,Posicao1Y},
-            Player2 = {100,Angle2,Velocidade2,Acel2,Pid2,Posicao2X,Posicao2Y},
-            Player3 = {100,Angle3,Velocidade3,Acel3,Pid3,Posicao3X,Posicao3Y},
+            Player1 = {100,Angle1,0,0,0,Pid1,Posicao1X,Posicao1Y},
+            Player2 = {100,Angle2,0,0,0,Pid2,Posicao2X,Posicao2Y},
+            Player3 = {100,Angle3,0,0,0,Pid3,Posicao3X,Posicao3Y},
             {Player1,Player2,Player3};
         4->
             Pid1 = startJogador(),
             Pid2 = startJogador(),
             Pid3 = startJogador(),
             Pid4 = startJogador(),
-            Player1 = {100,Angle1,Velocidade1,Acel1,Pid1,Posicao1X,Posicao1Y},
-            Player2 = {100,Angle2,Velocidade2,Acel2,Pid2,Posicao2X,Posicao2Y},
-            Player3 = {100,Angle3,Velocidade3,Acel3,Pid3,Posicao3X,Posicao3Y},
-            Player4 = {100,Angle4,Velocidade4,Acel4,Pid4,Posicao4X,Posicao4Y},
+            Player1 = {100,Angle1,0,0,0,Pid1,Posicao1X,Posicao1Y},
+            Player2 = {100,Angle2,0,0,0,Pid2,Posicao2X,Posicao2Y},
+            Player3 = {100,Angle3,0,0,0,Pid3,Posicao3X,Posicao3Y},
+            Player4 = {100,Angle4,0,0,0,Pid4,Posicao4X,Posicao4Y},
             {Player1,Player2,Player3,Player4}
     end.
 
@@ -154,7 +146,7 @@ geraValoresPlanetas()->
     {Planeta1,Planeta2,Planeta3,Planeta4}.
 
 %POSICAO PLAYERS
-alteraPosicaoPlayer({Combustivel,Angulo,Velocidade,Aceleracao,Pid,PosicaoX,PosicaoY})->
+alteraPosicaoPlayer({Combustivel,Angulo,Velocidade,VeX,VeY,Pid,PosicaoX,PosicaoY})->
     %Aceleração ou constante ou 0
     if 
         Velocidade > 0 ->
@@ -163,41 +155,51 @@ alteraPosicaoPlayer({Combustivel,Angulo,Velocidade,Aceleracao,Pid,PosicaoX,Posic
             NewVelocidade = Velocidade
     end,
     if 
-        Aceleracao > 0 ->
-            NewAceleracao = Aceleracao - 0.015;
-        Aceleracao =< 0 ->
-            NewAceleracao = Aceleracao
+        VeX > 0 ->
+            NewVeX = VeX - 0.05;
+        VeX < 0 ->
+            NewVeX = VeX + 0.05;
+        VeX == 0 ->
+            NewVeX = VeX 
+    end,
+    if 
+        VeY > 0 ->
+            NewVeY = VeY - 0.05;
+        VeY < 0 ->
+            NewVeY = VeY + 0.05;
+        VeY == 0 ->
+            NewVeY = VeY
     end,
     {TempPosicaoX, TempPosicaoY} =
         if 
             PosicaoX >= 540 andalso PosicaoY >= 360 ->
-                {PosicaoX - 0.35, PosicaoY - 0.17};
+                {PosicaoX - 0.5, PosicaoY - 0.32};
             PosicaoX >= 540 andalso PosicaoY =< 360 ->
-                {PosicaoX - 0.35, PosicaoY + 0.17};
+                {PosicaoX - 0.5, PosicaoY + 0.32};
             PosicaoX =< 540 andalso PosicaoY >= 360 ->
-                {PosicaoX + 0.35, PosicaoY - 0.17};
+                {PosicaoX + 0.5, PosicaoY - 0.32};
             true -> % PosicaoX =< 560 andalso PosicaoY =< 360
-                {PosicaoX + 0.35, PosicaoY + 0.17}
+                {PosicaoX + 0.5, PosicaoY + 0.32}
         end,
     NewPosicaoX = 
         if 
-            TempPosicaoX >= 1080 ->
+            TempPosicaoX > 1080 ->
                 1080;
-            TempPosicaoX =< 0 ->
+            TempPosicaoX < 0 ->
                 0;
             true ->
                 TempPosicaoX
         end,
     NewPosicaoY = 
         if 
-            TempPosicaoY >= 720 ->
+            TempPosicaoY > 720 ->
                 720;
-            TempPosicaoY =< 0 ->
+            TempPosicaoY < 0 ->
                 0;
             true ->
                 TempPosicaoY
         end,
-    {Combustivel,Angulo,NewVelocidade,NewAceleracao,Pid,NewPosicaoX,NewPosicaoY}.
+    {Combustivel,Angulo,NewVelocidade,NewVeX,NewVeY,Pid,NewPosicaoX,NewPosicaoY}.
     
 newPosicaoPlayers(PlayersMap)->
     NewPlayerMap = maps:map(fun(_Player,Posicao) ->                     
@@ -233,22 +235,37 @@ get_player_by_socket(_Socket, []) ->
     undefined.
 
 atualiza_com_keys(_,Value)->
-    {Combustivel,Angulo,Velocidade,Aceleracao,Pid,PosicaoX,PosicaoY} = Value,
+    {Combustivel,Angulo,Velocidade,VeX,VeY,Pid,PosicaoX,PosicaoY} = Value,
     Pid ! {check_keys,self()},
     receive
         {receive_keys,Keys}->
             Esq = maps:get("ESQUERDO",Keys), 
             Dir = maps:get("DIREITO",Keys),
             Centr = maps:get("CENTRAL",Keys),
+            if 
+            Combustivel > 0 ->
                 {
-                    Combustivel-((Esq+Dir+Centr)* 0.08),
+                    Combustivel-((Esq+Dir+Centr)* 0.1),
                     Angulo + ((Esq-Dir)*2),
                     Velocidade + (Centr*0.1),
-                    Aceleracao,
+                    VeX,
+                    VeY,
                     Pid, 
-                    PosicaoX + (math:cos(Angulo*(math:pi()/180))*Velocidade),
-                    PosicaoY - (math:sin(Angulo*(math:pi()/180))*Velocidade)
+                    PosicaoX + (math:cos(Angulo*(math:pi()/180))*Velocidade) + VeX,
+                    PosicaoY - (math:sin(Angulo*(math:pi()/180))*Velocidade) + VeY
+                };
+            Combustivel =< 0 ->
+                {
+                    Combustivel-((Esq+Dir+Centr)* 0.001),
+                    Angulo + ((Esq-Dir)*2),
+                    Velocidade,
+                    VeX,
+                    VeY,
+                    Pid, 
+                    PosicaoX + (math:cos(Angulo*(math:pi()/180))*Velocidade)+ VeX,
+                    PosicaoY - (math:sin(Angulo*(math:pi()/180))*Velocidade)+ VeY
                 }
+            end
     end.
 
 within_radius(X,Y,XC,YC,Raio1,Raio2) ->
@@ -281,13 +298,18 @@ check_collision_PP({Key1,Value1},[{Key2,Value2}|RestPL2])->
         {Player2,Socket2,From2} ->
             check_collision_PP({{Player1, Socket1, From1}, Value1},RestPL2);
         _ ->
-            {_,_,_,_,_,X2,Y2} = Value2,
-            {_,_,_,_,_,X1,Y1} = Value1,
-            %io:format("Posicao1: ~p ~p \n",[X1,Y1]),
-            %io:format("Posicao2: ~p ~p \n",[X2,Y2]),
+            {_,Angulo2,Velocidade2,_,_,_,X2,Y2} = Value2,
+            {_,Angulo1,Velocidade1,_,_,_,X1,Y1} = Value1,
+            NewVeX1 = Velocidade1 * math:cos(Angulo1),
+            NewVeY1 = Velocidade1 * math:sin(Angulo1),
+            NewVeX2 = Velocidade2 * math:cos(Angulo2),
+            NewVeY2 = Velocidade2 * math:sin(Angulo2),
             case within_radius(X1,Y1,X2,Y2,17.5,17.5) of
                 true ->
-                    io:format("Collision detected between player ~p and ~p\n", [Player1,Player2]);
+                    io:format("Collision detected between player ~p and ~p\n", [Player1,Player2]),
+                    K1 = {Player1, Socket1, From1},
+                    K2 = {Player1, Socket1, From1},
+                    self() ! {colision,K1,K2,NewVeX1,NewVeY1,NewVeX2,NewVeY2};
                 false -> 
                     ok
             end,
@@ -304,7 +326,7 @@ check_collisions_for_players([Player | RestPl],[Valor| RestVal], ValoresPlanetas
 check_collision_for_player(_Player,_Valor, []) ->
     ok; % Se não houver mais planetas, retorna ok
 check_collision_for_player(Player, Valor, [Planet | Rest]) ->
-    {_,_,_,_,_,X,Y} = Valor,
+    {_,_,_,_,_,_,X,Y} = Valor,
     {_,Angulo,Raio,DistSol} = Planet,
     XC = 540 + math:cos(Angulo) * DistSol,
     YC = 360 + math:sin(Angulo) * DistSol,
@@ -339,7 +361,7 @@ clean_string(PlayersMap,PlanetMap)->
     CleanStrPlanetas++","++CleanStrPlayers.
 
 loop(PlayersMap,PlanetMap,Countdown)->
-    %{PlayerUsername,Socket,Pid} : {Combustivel,Angulo,velocidade,aceleração,Pid,PosicaoX,PosicaoY} 
+    %{PlayerUsername,Socket,Pid} : {Combustivel,Angulo,velocidade,VeX,VeY,Pid,PosicaoX,PosicaoY} 
     %aceleração = velocidade_vetorial / alteração_do_tempo
     %Posição dos jogadores no espaço - ecran = 1080, 720
     %Planeta : {Velocidade,Angulo,raio,DistSol}
@@ -356,15 +378,23 @@ loop(PlayersMap,PlanetMap,Countdown)->
             {Username,Socket,PidJogador} = Player,
             lose_game(Username),
             PidJogador ! {lose_game_server,Username,Socket},
-            io:format("~p~n",[PlayersMap]),
             NewPlayerMap = maps:remove(Player,PlayersMap),
-            loop(NewPlayerMap,PlanetMap,Countdown)
+            io:format("NewPlayerMap: ~p~n",[NewPlayerMap]),
+            loop(NewPlayerMap,PlanetMap,Countdown);
+        {colision,K1,K2,NewVeX1,NewVeY1,NewVeX2,NewVeY2}->
+            {C1,A1,V1,VeX1,VeY1,Pid1,PX1,PY1} = maps:get(K1, PlayersMap),
+            {C2,A1,V2,VeX2,VeY2,Pid2,PX1,PY2} = maps:get(K2, PlayersMap),
+            P1 = {C1,A1,V1,VeX1+NewVeX1,VeY1+NewVeY1,Pid1,PX1,PY1},
+            P2 = {C2,A1,V2,VeX2+NewVeX2,VeY2+NewVeY2,Pid2,PX1,PY2},
+            PM = maps:put(K1, P1, PlayersMap),
+            NewPlayersMap = maps:put(K2, P2, PM),
+            loop(NewPlayersMap,PlanetMap,Countdown)
     after 40 -> %tps = 25
         %Players = maps:keys(PlayersMap),
         NewPlayerMap = receive_keys(PlayersMap),
         check_collision(NewPlayerMap,PlanetMap),
         check_collisionP(NewPlayerMap),
-        timer:sleep(5),
+        timer:sleep(8),
             case maps:size(NewPlayerMap) of 
                 1 ->
                     case Countdown of
