@@ -1,6 +1,6 @@
 -module(servidor).
--export([server/0,user/4]).
--import(login_manager, [startLoginManager/0,logout/1,login/2,create_account/2,
+-export([start/0,user/4,is_substring/2]).
+-import(login_manager, [startLoginManager/0,logout/1,login/2,create_account/2,top10/0,
 		close_account/2]).
 -import(lobby_manager, [startLobbyManager/0,find_Lobby/3,cancel_find/2]).
 -import(level_system, [startLevelSystem/0,win_game/1,lose_game/1,get_level/1,
@@ -12,7 +12,18 @@ compile() ->
     Modules = [login_manager, lobby_manager, level_system, game, servidor,jogador],
     lists:foreach(fun(M) -> compile:file(M) end, Modules).
 
-server() ->
+is_substring(SubStr, Str) when is_list(SubStr), is_list(Str) ->
+	SubStr == Str orelse is_substring_rec(SubStr, Str).
+	
+is_substring_rec(_, []) ->
+	false;
+is_substring_rec(SubStr, Str) ->
+	case lists:prefix(SubStr, Str) of
+		true -> true;
+		false -> is_substring_rec(SubStr, tl(Str))
+	end.
+
+start() ->
 	register(servidor,self()),
 	compile(),
 	io:format("Compiled\n"),
@@ -38,7 +49,23 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 	receive
 	{partida_pid,NewPidPartida, NewPidJogador}->
 		user(Sock,2,NewPidJogador,NewPidPartida);
-	{lose_game_server,_Username,_Socket}->  %Lose game Protocol Code - 21
+	{lose_game_server,Username,_Socket}->  %Lose game Protocol Code - 21
+		io:format("vou entrar no lose game\n"),
+		case lose_game(Username) of
+			{level_down} ->
+				io:format("Leveled down\n"),
+				NewLevel = get_level(Username),
+				Str = io_lib:format("new_level, ~p", NewLevel),
+				gen_tcp:send(Sock,Str);
+			{ok} ->
+				io:format("ok\n"),
+				ok;
+			{invalid}->
+				io:format("Invalid\n"),
+				gen_tcp:send(Sock,"Error"),
+				io:format("ERROR dropping level\n")
+		end,
+		io:format("vou lancar sock lost\n"),
 		gen_tcp:send(Sock,"lost"),
 		io:format("Lancado Socket lost ao socket ~p\n",[Sock]),
 		user(Sock,1,null,null);
@@ -47,28 +74,44 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 		user(Sock,Mode,null,null);
 	{tcp, _, Data} when Mode =:= 2 ->
 		%Quando está a jogar
-		case Data of
-			<<"30">> -> %Purpulsor da esquerda premido
-				PidJogador ! purp_esquerdo_pressionado,
-				user(Sock,2,PidJogador,PidPartida);
-			<<"31">> -> %Purpulsor da direita premido
-				PidJogador ! purp_direito_pressionado,
-				user(Sock,2,PidJogador,PidPartida);
-			<<"32">> -> %Purpulsor central premido
-				PidJogador ! purp_central_pressionado,
-				user(Sock,2,PidJogador,PidPartida);
-			<<"40">> -> %Purpulsor da esquerda despremido
-				PidJogador ! purp_esquerdo_despressionado,
-				user(Sock,2,PidJogador,PidPartida);
-			<<"41">> -> %Purpulsor da direita despremido
-				PidJogador ! purp_direito_despressionado,
-				user(Sock,2,PidJogador,PidPartida);
-			<<"42">> -> %Purpulsor central despremido
-				PidJogador ! purp_central_despressionado,
-				user(Sock,2,PidJogador,PidPartida);
+		DataString = binary_to_list(Data),
+		case is_substring("30", DataString) of 
+			true -> 
+				PidJogador ! purp_esquerdo_pressionado;
+			_ -> 
+				ok
+		end,
+		case is_substring("31", DataString) of
+			true -> 
+				PidJogador ! purp_direito_pressionado;
+			_ -> 
+				ok
+		end,
+		case is_substring("32", DataString) of
+			true -> 
+				PidJogador ! purp_central_pressionado;
 			_->
-				user(Sock,2,PidJogador,PidPartida)
-		end;
+				ok
+		end,
+		case is_substring("40", DataString) of
+			true -> 
+				PidJogador ! purp_esquerdo_despressionado;
+			_->
+				ok
+		end,
+		case is_substring("41", DataString) of
+			true -> 
+				PidJogador ! purp_direito_despressionado;
+			_->
+				ok
+		end,
+		case is_substring("42", DataString) of
+			true -> 
+				PidJogador ! purp_central_despressionado;
+			_->
+				ok
+		end,
+		user(Sock,2,PidJogador,PidPartida);
 	{tcp, _, Data} when Mode =:= 1 ->
 		case string:split(binary_to_list(Data), " ",all) of
 			["30"]->
@@ -153,7 +196,17 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 				end;
 			["20",Username] -> %Win game Protocol Code - 20
 			io:format("Recebido Socket 20\n"),
-				win_game(Username),
+				case win_game(Username) of
+					level_up ->
+						NewLevel = get_level(Username),
+						Str = io_lib:format("new_level, ~p", NewLevel),
+						gen_tcp:send(Sock,Str);
+					ok ->
+						ok;
+					invalid->
+						gen_tcp:send(Sock,"Error"),
+						io:format("ERROR leveling up\n")
+				end,
 				io:format("~p won the game\n",[Username]),
 				user(Sock,1,null,null);
 			_ ->
@@ -162,6 +215,9 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 	{tcp, _, Data} when Mode =:= 0 ->
 		io:format("~p\n",[Data]),
 		case string:split(binary_to_list(Data), " ",all) of
+			["50"] ->
+				Top10List = top10(),
+				gen_tcp:send(Sock,Top10List);
 			["10", _Username] ->
 				user(Sock,0,null,null);
 			["00", Username, Password] -> %Login Protocol Code - 00
@@ -205,7 +261,9 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 						gen_tcp:send(Sock,"Error 01"),
 						io:format("Sent created_Account Failure\n"),
 						user(Sock,0,null,null)
-				end
+				end;
+			_ ->
+				user(Sock,0,null,null)
 		end;
 	{tcp_closed, _} when Mode =:= 2->
 		case {Mode, PidPartida} of
@@ -221,9 +279,4 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 		io:format("Utilizador desconectado\n");
 	{tcp_error, _, _} ->
 		io:format("Error\n")
-	%{error, Type} -> %Erros de protocolo
-	%	case Type of 
-	%		0 ->
-	%			gen_tcp:send(Sock,"Tipo de erro")
-	%	end
 	end.

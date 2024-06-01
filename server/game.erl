@@ -11,11 +11,10 @@ atualiza_com_keys/2,
 clean_string/2,
 get_player_by_Pid/2,
 check_collision/2,
-check_collision_for_player/3,
 check_collisionP/1,
 check_collision_PP/2,
 check_collisions_PP/2,
-check_collisions_for_players/3,
+check_collisions_player_planet/3,
 get_Sockets/1]).
 -import(level_system, [lose_game/1,win_game/2]).
 -import(jogador, [startJogador/0]).
@@ -156,17 +155,17 @@ alteraPosicaoPlayer({Combustivel,Angulo,Velocidade,VeX,VeY,Pid,PosicaoX,PosicaoY
     end,
     if 
         VeX > 0 ->
-            NewVeX = VeX - 0.05;
+            NewVeX = VeX - 0.1;
         VeX < 0 ->
-            NewVeX = VeX + 0.05;
+            NewVeX = VeX + 0.1;
         VeX == 0 ->
             NewVeX = VeX 
     end,
     if 
         VeY > 0 ->
-            NewVeY = VeY - 0.05;
+            NewVeY = VeY - 0.3;
         VeY < 0 ->
-            NewVeY = VeY + 0.05;
+            NewVeY = VeY + 0.3;
         VeY == 0 ->
             NewVeY = VeY
     end,
@@ -257,7 +256,7 @@ atualiza_com_keys(_,Value)->
             Combustivel =< 0 ->
                 {
                     Combustivel-((Esq+Dir+Centr)* 0.001),
-                    Angulo + ((Esq-Dir)*2),
+                    Angulo,
                     Velocidade,
                     VeX,
                     VeY,
@@ -277,7 +276,7 @@ check_collision(PlayersMap, PlanetMap) ->
     Players = maps:keys(PlayersMap), %[{Player1},{Player2},{Player3},...]
     Valores = maps:values(PlayersMap), %[{valor1},{valor2},{valor3},...]
     ValoresPlanetas = maps:values(PlanetMap), %[{valor1},{valor2},{valor3},...]
-    check_collisions_for_players(Players, Valores,ValoresPlanetas).
+    check_collisions_player_planet(Players, Valores,ValoresPlanetas).
 
 check_collisionP(PlayersMap) ->
     PlayersList = maps:to_list(PlayersMap),
@@ -300,10 +299,10 @@ check_collision_PP({Key1,Value1},[{Key2,Value2}|RestPL2])->
         _ ->
             {_,Angulo2,Velocidade2,_,_,_,X2,Y2} = Value2,
             {_,Angulo1,Velocidade1,_,_,_,X1,Y1} = Value1,
-            NewVeX1 = Velocidade1 * math:cos(Angulo1),
-            NewVeY1 = Velocidade1 * math:sin(Angulo1),
-            NewVeX2 = Velocidade2 * math:cos(Angulo2),
-            NewVeY2 = Velocidade2 * math:sin(Angulo2),
+            NewVeX1 = Velocidade2 * math:cos(Angulo2),
+            NewVeY1 = Velocidade2 * math:sin(Angulo2),
+            NewVeX2 = Velocidade1 * math:cos(Angulo1),
+            NewVeY2 = Velocidade1 * math:sin(Angulo1),
             case within_radius(X1,Y1,X2,Y2,17.5,17.5) of
                 true ->
                     io:format("Collision detected between player ~p and ~p\n", [Player1,Player2]),
@@ -317,15 +316,15 @@ check_collision_PP({Key1,Value1},[{Key2,Value2}|RestPL2])->
     end.
     
 
-check_collisions_for_players([],[], _PlanetMap) ->
+check_collisions_player_planet([],[], _PlanetMap) ->
     ok; % Se não houver mais players, retorna ok
-check_collisions_for_players([Player | RestPl],[Valor| RestVal], ValoresPlanetas) ->
-    check_collision_for_player(Player,Valor, ValoresPlanetas),
-    check_collisions_for_players(RestPl,RestVal, ValoresPlanetas).
+check_collisions_player_planet([Player | RestPl],[Valor| RestVal], ValoresPlanetas) ->
+    check_collision_player_planet(Player,Valor, ValoresPlanetas),
+    check_collisions_player_planet(RestPl,RestVal, ValoresPlanetas).
 
-check_collision_for_player(_Player,_Valor, []) ->
+check_collision_player_planet(_Player,_Valor, []) ->
     ok; % Se não houver mais planetas, retorna ok
-check_collision_for_player(Player, Valor, [Planet | Rest]) ->
+check_collision_player_planet(Player, Valor, [Planet | Rest]) ->
     {_,_,_,_,_,_,X,Y} = Valor,
     {_,Angulo,Raio,DistSol} = Planet,
     XC = 540 + math:cos(Angulo) * DistSol,
@@ -344,7 +343,7 @@ check_collision_for_player(Player, Valor, [Planet | Rest]) ->
         false -> 
             ok
     end,
-    check_collision_for_player(Player, Valor, Rest).    
+    check_collision_player_planet(Player, Valor, Rest).    
 
 receive_keys(PlayersMap)->
     maps:map(fun(Key,Value) -> atualiza_com_keys(Key,Value) end,PlayersMap).
@@ -376,21 +375,23 @@ loop(PlayersMap,PlanetMap,Countdown)->
             loop(NewPlayerMap,PlanetMap,Countdown);
         {lost, Player}->
             {Username,Socket,PidJogador} = Player,
-            lose_game(Username),
             PidJogador ! {lose_game_server,Username,Socket},
             NewPlayerMap = maps:remove(Player,PlayersMap),
             io:format("NewPlayerMap: ~p~n",[NewPlayerMap]),
             loop(NewPlayerMap,PlanetMap,Countdown);
         {colision,K1,K2,NewVeX1,NewVeY1,NewVeX2,NewVeY2}->
-            {C1,A1,V1,VeX1,VeY1,Pid1,PX1,PY1} = maps:get(K1, PlayersMap),
-            {C2,A1,V2,VeX2,VeY2,Pid2,PX1,PY2} = maps:get(K2, PlayersMap),
-            P1 = {C1,A1,V1,VeX1+NewVeX1,VeY1+NewVeY1,Pid1,PX1,PY1},
-            P2 = {C2,A1,V2,VeX2+NewVeX2,VeY2+NewVeY2,Pid2,PX1,PY2},
+            {C1,A1,V1,_,_,Pid1,PX1,PY1} = maps:get(K1, PlayersMap),
+            {C2,A2,V2,_,_,Pid2,PX2,PY2} = maps:get(K2, PlayersMap),
+            NewX1 = PX2 + (math:cos(A2*(math:pi()/180))*V2) + NewVeX2*2,
+            NewY1 = PY2 - (math:sin(A2*(math:pi()/180))*V2) + NewVeY2*2,
+            NewX2 = PX1 + (math:cos(A1*(math:pi()/180))*V1) + NewVeX1*2,
+            NewY2 = PY1 - (math:sin(A1*(math:pi()/180))*V1) + NewVeY1*2,
+            P1 = {C1,A1,V1,NewVeX1,NewVeY1,Pid1,NewX1,NewY1},
+            P2 = {C2,A1,V2,NewVeX2,NewVeY2,Pid2,NewX2,NewY2},
             PM = maps:put(K1, P1, PlayersMap),
             NewPlayersMap = maps:put(K2, P2, PM),
             loop(NewPlayersMap,PlanetMap,Countdown)
     after 40 -> %tps = 25
-        %Players = maps:keys(PlayersMap),
         NewPlayerMap = receive_keys(PlayersMap),
         check_collision(NewPlayerMap,PlanetMap),
         check_collisionP(NewPlayerMap),

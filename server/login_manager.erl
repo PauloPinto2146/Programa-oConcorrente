@@ -4,10 +4,29 @@
 		close_account/2,
 		login/2,
 		logout/1,
-		loop/1]).
+		loop/1,
+		level_up/2,
+		level_down/2]).
 
 startLoginManager() -> 
-	register(?MODULE,spawn(fun() -> loop(#{}) end)).
+	register(?MODULE,spawn(fun() -> loop(#{"VieirinhaHardcore" => {"veiraPass",99},
+										  "Piriu" => {"piriuPass",99},
+										  "ZeCarlos" => {"zeCarlosPass",5},
+										  "Tunico" => {"tunicoPass",2}}) end)).
+
+level_up(Username,Level)->
+	?MODULE ! {level_up,Username,Level,self()},
+	receive
+		{ok,?MODULE} -> {ok,created_Account};
+		{invalid_Username,_} -> {"ERROR:Unvalid Username"}
+	end.
+
+level_down(Username,Level)->
+	?MODULE ! {level_down,Username,Level,self()},
+	receive
+		{ok,?MODULE} -> {ok,created_Account};
+		{invalid_Username,_} -> {"ERROR:Unvalid Username"}
+	end.
 
 create_account(Username, Passwd) ->% ok | user_exists.
 	?MODULE ! {create_account,Username,Passwd,self()},
@@ -37,6 +56,7 @@ logout(Username) -> %ok.
 	end.
 
 loop(Map) ->
+	%Username => {Password,Nivel}
 	receive 
 		{create_account,Username,Passwd,From} ->
 			case maps:is_key(Username,Map) of
@@ -47,12 +67,9 @@ loop(Map) ->
 					From ! {ok,?MODULE},
 					level_system ! {new_player,Username,?MODULE},
 					loop(maps:put(Username,{Passwd,1},Map))
-					%Password, 
-					%nivel
 			end;
 		{close_account,Username,Passwd,From} ->
 			case maps:find(Username,Map) of
-				%{ok,{Pass,_}} when Pass =:= Passwd -> 
 				{ok,{Passwd,_}} ->
 					From ! {ok,?MODULE},
 					loop(maps:remove(Username,Map));
@@ -77,5 +94,23 @@ loop(Map) ->
 				_ ->
 					From ! {invalid_Username, ?MODULE},
 					loop(Map)
-			end
+			end;
+		{level_up,Username,Level,From}->
+			case maps:find(Username,Map) of
+				{ok,{Pass,_}} ->
+					loop(maps:put(Username,{Pass,Level},Map)),
+					From ! {ok,?MODULE};
+				_ ->
+					From ! {invalid_Username, ?MODULE},
+					loop(Map)
+			end;
+		{level_down,Username,Level,From}->
+		case maps:find(Username,Map) of
+				{ok,{Pass,_}} ->
+					loop(maps:put(Username,{Pass,Level},Map)),
+					From ! {ok,?MODULE};
+				_ ->
+					From ! {invalid_Username, ?MODULE},
+					loop(Map)
+		end
 	end.
