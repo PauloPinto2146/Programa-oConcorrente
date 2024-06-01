@@ -62,18 +62,19 @@ top10()->
 		{Top10List,?MODULE} -> Top10List
 	end.
 
-print_top_players(_, 0,Res) ->
+print_top_players(_,0,Res) ->
 	SortedPlayers = string:join(Res, ","),
     SortedPlayers;
 
-print_top_players([], _,Res) ->
+print_top_players([],_Count,Res) ->
 	SortedPlayers = string:join(Res, ","),
     SortedPlayers;
+	%Player,Nivel,DerrCons
 
 print_top_players([{Player,{Nivel,_,_,_,DerrCons}} | Tail], Count,Res) ->
 	%Primeiro criterio - nivel
 	%Segundo criterio - Derrotas consecutivas
-	PlayerInfo = io_lib:format("~w,~w,~w", [Player, Nivel, DerrCons]),
+	PlayerInfo = io_lib:format("~p,~p,~p", [Player, Nivel, DerrCons]),
     NewRes = lists:append([PlayerInfo], Res),
     print_top_players(Tail, Count - 1, NewRes).
 
@@ -142,7 +143,7 @@ loop(Map)->
 			end;
 		{top10,From}->
 			PlayerList =maps:to_list(Map),
-			Sp = lists:keysort(2,PlayerList),
+			Sp = lists:keysort(2,[PlayerList]),
 			CompareFun = fun({_,{_,_,_,_,Losses1}}, {_,{_,_,_,_,Losses2}}) -> Losses1 >= Losses2 end,
 			SortedPlayers = lists:sort(CompareFun,Sp),
     		Top10 = print_top_players(SortedPlayers, 10,[]),

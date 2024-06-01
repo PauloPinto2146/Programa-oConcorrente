@@ -209,14 +209,14 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 				end,
 				io:format("~p won the game\n",[Username]),
 				user(Sock,1,null,null);
-			_ ->
-				user(Sock,1,null,null);
 			["50"] ->
 				io:format("Recebi socket 50\n"),
 				Top10Str = top10(),
 				io:format("~p\n",Top10Str),
 				io_lib:format("top10list,~p",Top10Str),
-				gen_tcp:send(Sock,Top10Str)
+				gen_tcp:send(Sock,Top10Str);
+			_ ->
+				user(Sock,1,null,null)
 		end;
 	{tcp, _, Data} when Mode =:= 0 ->
 		io:format("~p\n",[Data]),
@@ -224,7 +224,8 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 			["50"] ->
 				io:format("Entrei no 50\n"),
 				Top10Str = top10(),
-				io_lib:format("top10list,~p",Top10Str),
+				io:format("top10: ~p\n",[Top10Str]),
+				io_lib:format("top10list,~p",[Top10Str]),
 				io:format("lancei top10\n"),
 				gen_tcp:send(Sock,Top10Str);
 			["10", _Username] ->
