@@ -104,16 +104,27 @@ void draw() {
   }
 }
 
-void backgroundStars(){
-  background(11, 18, 77);
+void backgroundStars() {
+  //color topColor = color(45, 60, 150);
+  //color bottomColor = color(8, 11, 50);
+  color topColor = color(0, 0, 95);
+  color bottomColor = color(0, 0, 25);
   
+  // Gradient
+  for (int y = 0; y < height; y++) {
+    float lerpAmt = map(y, 0, height, 0, 1);
+    color c = lerpColor(topColor, bottomColor, lerpAmt);
+    stroke(c);
+    line(0, y, width, y);
+  }
+
+  // Stars
   fill(white);
   noStroke();
   for (int i = 0; i < numEstrelas; i++) {
     ellipse(starX[i], starY[i], starSize[i], starSize[i]);
   }
 }
-
 void drawGame() {
   backgroundStars();
   
@@ -195,23 +206,23 @@ void drawGame() {
     if(resultList.size() == 8){
       combustivel1 = resultList.remove(0);
       angulo1 = 90 - resultList.remove(0);
-      velocidade1p = resultList.remove(0);
+      velocidade1p = resultList.remove(0); 
       resultList.remove(0);
       resultList.remove(0);
       resultList.remove(0);
       p1x = resultList.remove(0);
       p1y = resultList.remove(0);
-
-      if(numJogador == 1)
-        drawNave(p1x,p1y,angulo1,0.7,color(0,0,255));
-      else
-        drawNave(p1x,p1y,angulo1,0.7,color(255,0,0));
+      
+      drawNave(p1x,p1y,angulo1,0.7,color(0,0,255));
       
       switch(numJogador){
         case 1:
+          drawName(p1x,p1y);
           drawFuelBar(combustivel1);
+          break;
         case 2:
           drawFuelBar(combustivel2);
+          break;
       }
     }
     if(resultList.size() == 16){
@@ -232,17 +243,22 @@ void drawGame() {
       resultList.remove(0);
       p2x = resultList.remove(0);
       p2y = resultList.remove(0);
-      
+        
       drawNave(p1x,p1y,angulo1,0.7,color(0,0,255));
       drawNave(p2x,p2y,angulo2,0.7,color(255,0,0));
-      
+        
       switch(numJogador){
         case 1:
+          drawName(p1x,p1y);
           drawFuelBar(combustivel1);
+          break;
         case 2:
+          drawName(p2x,p2y);
           drawFuelBar(combustivel2);
+          break;
       }
     }
+    
     if(resultList.size() == 24){
       combustivel1 = resultList.remove(0);
       angulo1 = 90 - resultList.remove(0);
@@ -269,17 +285,24 @@ void drawGame() {
       p3x = resultList.remove(0);
       p3y = resultList.remove(0);
       
-      drawNave(p1x,p1y,angulo1,50,color(0,0,255));
-      drawNave(p2x,p2y,angulo1,50,color(255,0,0));
-      drawNave(p3x,p3y,angulo3,50,color(0,255,0));
-      
+
+      drawNave(p1x,p1y,angulo1,0.7,color(0,0,255));
+      drawNave(p2x,p2y,angulo2,0.7,color(255,0,0));
+      drawNave(p3x,p3y,angulo3,0.7,color(0,255,0));
+
       switch(numJogador){
         case 1:
+          drawName(p1x,p1y);
           drawFuelBar(combustivel1);
+          break;
         case 2:
+          drawName(p2x,p2y);
           drawFuelBar(combustivel2);
+          break;
         case 3:
+          drawName(p3x,p3y);
           drawFuelBar(combustivel3);
+          break;
       }
     }
     if(resultList.size() == 32){
@@ -319,20 +342,28 @@ void drawGame() {
       p4x = resultList.remove(0);
       p4y = resultList.remove(0);
 
-      drawNave(p1x,p1y,angulo1,50,color(0,0,255));
-      drawNave(p2x,p2y,angulo1,50,color(255,0,0));
-      drawNave(p3x,p3y,angulo3,50,color(0,255,0));
-      drawNave(p4x,p4y,angulo4,50,color(255,255,0));
+      drawNave(p1x,p1y,angulo1,0.7,color(0,0,255));
+      drawNave(p2x,p2y,angulo2,0.7,color(255,0,0));
+      drawNave(p3x,p3y,angulo3,0.7,color(0,255,0));
+      drawNave(p4x,p4y,angulo4,0.7,color(255,255,0));
       
       switch(numJogador){
         case 1:
+          drawName(p1x,p1y);
           drawFuelBar(combustivel1);
+          break;
         case 2:
+          drawName(p2x,p2y);
           drawFuelBar(combustivel2);
+          break;
         case 3:
+          drawName(p3x,p3y);
           drawFuelBar(combustivel3);
+          break;
         case 4:
+          drawName(p4x,p4y);
           drawFuelBar(combustivel4);
+          break;
       }
     }
   }

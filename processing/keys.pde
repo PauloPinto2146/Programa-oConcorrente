@@ -15,7 +15,6 @@ void keyPressed() {
         if (data != null) {
           receivedData = data.trim();
           println("Received: " + receivedData);
-          println("ESTOU NO KEYPRESSED LOADING");
         } else {
           errorText = "Unknown Error";
           activeScreen = "ERROR_POPUP";
@@ -38,7 +37,7 @@ void keyPressed() {
     if (keyCode == UP || key == 'w' || key == 'W') {
       menuButtonIndex = max(1, menuButtonIndex - 1);
     } else if (keyCode == DOWN || key == 's' || key == 'S') {
-      menuButtonIndex = min(3, menuButtonIndex + 1);
+      menuButtonIndex = min(4, menuButtonIndex + 1);
     }
     println(menuButtonIndex);
   } else if (activeScreen.equals("LOGIN_POPUP")) {
@@ -73,7 +72,7 @@ void keyPressed() {
     if (keyCode == UP || key == 'w' || key == 'W') {
       menuButtonIndex = max(1, menuButtonIndex - 1);
     } else if (keyCode == DOWN || key == 's' || key == 'S') {
-      menuButtonIndex = min(3, menuButtonIndex + 1);
+      menuButtonIndex = min(4, menuButtonIndex + 1);
     }
   } else if (activeScreen.equals("TUTORIAL_POPUP")) {
     if (key == BACKSPACE) {
@@ -102,6 +101,9 @@ void keyPressed() {
   }else if (activeScreen.equals("LOSE")) {
     if (key == BACKSPACE)
       activeScreen ="LOBBY";
+  }else if (activeScreen.equals("TOP10")) {
+    if (key == BACKSPACE)
+      activeScreen = prevMenu;
   }
 }
 
@@ -117,11 +119,15 @@ void keyReleased() {
           activeScreen = "REGISTER_POPUP";
           break;
         case 3:
+          prevMenu = "MENU";
+          activeScreen = "TOP10";
+          break;
+        case 4:
           exit();
           break;
       }
     }
-  } else if (activeScreen.equals("LOGIN_POPUP")) {
+  }else if (activeScreen.equals("LOGIN_POPUP")) {
     if (key == ENTER || key == ' ') {
       switch (popupButtonIndex) {
         case 1:
@@ -194,7 +200,14 @@ void keyReleased() {
             activeScreen = "ERROR_POPUP";
             println("Couldn't create account");
             loggedIn = false;
-          } else {
+            reset();
+          } else if(!popupPassword.equals(confirmPassword)){
+            errorText = "\"Password\" and \"Confirm Password\" are different."; 
+            activeScreen = "ERROR_POPUP";
+            println("Couldn´t create account, different passwords");
+            loggedIn = false;
+            reset();
+          } else{
             println("Socket lançado: 02 " + popupUsername + " " + popupPassword);
             socket.write("02 " + popupUsername + " " + popupPassword);
             delay(30);
@@ -219,6 +232,7 @@ void keyReleased() {
             }
             if (receivedData.equals("Error 01")) {
               errorText = "This account already exists";
+              reset();
               activeScreen = "ERROR_POPUP";
               println("Couldn't create account");
               loggedIn = false;
@@ -227,7 +241,7 @@ void keyReleased() {
           }
       }
     }
-  } else if (activeScreen.equals("LOBBY")) {
+  }else if (activeScreen.equals("LOBBY")) {
     if (key == ENTER || key == ' ') {
       switch (menuButtonIndex) {
         case 1:
@@ -239,6 +253,10 @@ void keyReleased() {
           activeScreen = "TUTORIAL_POPUP";
           break;
         case 3:
+          prevMenu = "LOBBY";
+          activeScreen = "TOP10";
+          break;
+        case 4:
           println("Socket lançado: 01 " + popupUsername);
           socket.write("01 " + popupUsername);
           delay(30);

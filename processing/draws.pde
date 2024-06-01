@@ -1,6 +1,8 @@
 void drawPopupWindow(int w, int h, int px, int py){
   fill(white);
   rect(px, py, w, h, 20);
+  drawNave(px + 10, py + 10, 90 +degrees(atan2(py + h - py - 10, px + w - px - 10)), 1, blue);
+  drawPlanet(blue, 90, px + w, py + h - 10);
 }
 
 void drawReturnMessage(int w, int h, int px, int py){
@@ -43,14 +45,15 @@ void drawMenu() {
   drawPopupWindow(popupWidth, popupHeight, popupX, popupY);
   
   // Draw title
-  drawTitle("The Game", blue, width / 2, height / 4 + 25, 48);
+  drawTitle("Speiçe Inbajion", blue, width / 2, height / 4 + 25, 48);
 
   // Calculate the y-position for the first button
   int startY = height / 2 - buttonHeight;
   stroke(0);
   drawButton(buttonX, startY, "Login", menuButtonIndex == 1, blue);
   drawButton(buttonX, startY + buttonHeight + buttonSpacing, "Register", menuButtonIndex == 2, blue);
-  drawButton(buttonX, startY + buttonHeight * 2 + buttonSpacing * 2, "Quit", menuButtonIndex == 3, blue);
+  drawButton(buttonX, startY + buttonHeight * 2 + buttonSpacing * 2 , "TOP 10", menuButtonIndex == 3, blue);
+  drawButton(buttonX, startY + buttonHeight * 3 + buttonSpacing * 3, "Quit", menuButtonIndex == 4, blue);
 }
 
 void drawLoginPopup() {
@@ -124,7 +127,8 @@ void drawLobby(){
   stroke(0);
   drawButton(buttonX, startY, "Start Game", menuButtonIndex == 1, blue);
   drawButton(buttonX, startY + buttonHeight  + buttonSpacing, "Tutorial", menuButtonIndex == 2, blue);
-  drawButton(buttonX, startY + buttonHeight * 2 + buttonSpacing * 2, "Logout", menuButtonIndex == 3, blue);
+  drawButton(buttonX, startY + buttonHeight * 2 + buttonSpacing * 2 , "TOP 10", menuButtonIndex == 3, blue);
+  drawButton(buttonX, startY + buttonHeight * 3 + buttonSpacing * 3, "Logout", menuButtonIndex == 4, blue);
 }
 
 void drawTutorialPopup() {
@@ -327,51 +331,57 @@ void drawPlanet(color mainColor, float size,float x,float y) {
   ellipse(x + size * 0.1, y - size * 0.05, size * 0.03, size * 0.03);
 }
   
+void drawName(float x, float y){
+  fill(255);
+    textSize(20);
+    if(activeScreen == "GAME") text(popupUsername, x, y - 50);
+  }
+  
 void drawNave(float x, float y, float angle, float tamanho, color details) {
-  pushMatrix();
-  translate(x, y);
-  rotate(radians(angle));
-  // Rotate roda consoante o referencial do processing
-
-  stroke(0);
+    pushMatrix();
+    translate(x, y);
+    rotate(radians(angle));
+    // Rotate roda consoante o referencial do processing
   
-  // Janela
-  fill(105, 208, 247);
-  ellipse(0, -19 * tamanho, 28 * tamanho, 25 * tamanho);
-  
-  // Propulsores
-  fill(121, 121, 121);
-  rect(-35 * tamanho, 8 * tamanho, 70 * tamanho, 10 * tamanho);
-  
-  beginShape();
-  vertex(-5 * tamanho, 26 * tamanho);
-  vertex(5 * tamanho, 26 * tamanho);
-  vertex(15 * tamanho, 36 * tamanho);
-  vertex(-15 * tamanho, 36 * tamanho);
-  endShape(CLOSE);
-  
-  // Asas da nave
-  fill(details);
-  triangle(-22 * tamanho, -10 * tamanho, -48 * tamanho, 25 * tamanho, -10 * tamanho, 2 * tamanho);
-  triangle(22 * tamanho, -10 * tamanho, 48 * tamanho, 25 * tamanho, 10 * tamanho, 2 * tamanho);
-  rect(-12.5 * tamanho, 20 * tamanho, 25 * tamanho, 10 * tamanho);
-  
-  // Corpo da nave
-  fill(200);
-  ellipse(0, 0, 50 * tamanho, 50 * tamanho);
-  
-  fill(details);
-  rect(-2.5 * tamanho, -15 * tamanho, 5 * tamanho, 30 * tamanho);
-  
-  // Desenho dos fogos dos propulsores
-  fill(boost);
-  if (left_boost) triangle(-35 * tamanho, 18 * tamanho, -30 * tamanho, 35 * tamanho, -25 * tamanho, 18 * tamanho);
-  
-  if (right_boost) triangle(35 * tamanho, 18 * tamanho, 30 * tamanho, 35 * tamanho, 25 * tamanho, 18 * tamanho);
-  
-  if (main_boost) triangle(-5 * tamanho, 36 * tamanho, 0 * tamanho, 55 * tamanho, 5 * tamanho, 36 * tamanho);
-  
-  popMatrix();
+    stroke(0);
+    
+    // Janela
+    fill(105, 208, 247);
+    ellipse(0, -19 * tamanho, 28 * tamanho, 25 * tamanho);
+    
+    // Propulsores
+    fill(121, 121, 121);
+    rect(-35 * tamanho, 8 * tamanho, 70 * tamanho, 10 * tamanho);
+    
+    beginShape();
+    vertex(-5 * tamanho, 26 * tamanho);
+    vertex(5 * tamanho, 26 * tamanho);
+    vertex(15 * tamanho, 36 * tamanho);
+    vertex(-15 * tamanho, 36 * tamanho);
+    endShape(CLOSE);
+    
+    // Asas da nave
+    fill(details);
+    triangle(-22 * tamanho, -10 * tamanho, -48 * tamanho, 25 * tamanho, -10 * tamanho, 2 * tamanho);
+    triangle(22 * tamanho, -10 * tamanho, 48 * tamanho, 25 * tamanho, 10 * tamanho, 2 * tamanho);
+    rect(-12.5 * tamanho, 20 * tamanho, 25 * tamanho, 10 * tamanho);
+    
+    // Corpo da nave
+    fill(200);
+    ellipse(0, 0, 50 * tamanho, 50 * tamanho);
+    
+    fill(details);
+    rect(-2.5 * tamanho, -15 * tamanho, 5 * tamanho, 30 * tamanho);
+    
+    // Desenho dos fogos dos propulsores
+    fill(boost);
+    if (left_boost) triangle(-35 * tamanho, 18 * tamanho, -30 * tamanho, 35 * tamanho, -25 * tamanho, 18 * tamanho);
+    
+    if (right_boost) triangle(35 * tamanho, 18 * tamanho, 30 * tamanho, 35 * tamanho, 25 * tamanho, 18 * tamanho);
+    
+    if (main_boost) triangle(-5 * tamanho, 36 * tamanho, 0 * tamanho, 55 * tamanho, 5 * tamanho, 36 * tamanho);
+    
+    popMatrix();
 }
 
 void drawFuelBar(float fuel){
@@ -395,7 +405,6 @@ void drawFuelBar(float fuel){
   translate(40, height - 40);
   rotate(-45);
   fill(255);
-  stroke(200);
   textAlign(CENTER, CENTER);
   textSize(20);
   text("FUEL", 0, 0); 
@@ -405,6 +414,24 @@ void drawFuelBar(float fuel){
 
 void drawLossScreen() {
   backgroundStars();
+
+  socket.write("20 "+ popupUsername);
+  if (socket.available() > 0) {
+    String data = socket.readString();
+    if (data != null) {
+       receivedData = data.trim();
+    }
+  }if (receivedData.startsWith("new_level")){
+     println("Desci de nivel!");
+     String[] parts = receivedData.split(", ");
+        if (parts.length == 2) {
+           try {
+              curr_level = Integer.parseInt(parts[1]);
+           } catch (NumberFormatException e) {
+             println("Erro ao descer de nível: " + e.getMessage());
+          }
+      }
+  }
 
   // Draw popup window
   int popupWidth = 600;
@@ -464,10 +491,30 @@ void drawLossScreen() {
   rect(width / 2 - popupX - 60, height / 2 + popupY - 31, popupWidth - 1, 20, 0, 0, 50, 50);
   
   drawReturnMessage(popupWidth, popupHeight / 2 - 90, popupX, popupY);
+  drawPlanet(blue, 90, popupX + popupWidth, popupY + popupHeight - 10);
 }
 
 void drawWinScreen(){
   backgroundStars();
+
+  socket.write("20 "+ popupUsername);
+  if (socket.available() > 0) {
+    String data = socket.readString();
+    if (data != null) {
+       receivedData = data.trim();
+    }
+  }if (receivedData.startsWith("new_level")){
+     println("Subi de nivel!");
+     String[] parts = receivedData.split(", ");
+        if (parts.length == 2) {
+           try {
+              curr_level = Integer.parseInt(parts[1]);
+           } catch (NumberFormatException e) {
+             println("Erro ao subir de nível: " + e.getMessage());
+          }
+      }
+      
+  }
 
   // Draw popup window
   int popupWidth = 600;
@@ -510,4 +557,49 @@ void drawWinScreen(){
   rect(width / 2 - popupX - 60, height / 2 + popupY - 31, popupWidth - 1, 20, 0, 0, 50, 50);
   
   drawReturnMessage(popupWidth, popupHeight / 2 - 90, popupX, popupY);
+  drawPlanet(blue, 90, popupX + popupWidth, popupY + popupHeight - 10);
+}
+
+void drawTop10(String jogadores[]){
+  backgroundStars();
+
+  // Draw popup window
+  int popupWidth = 400;
+  int popupHeight = 600;
+  int popupX = width / 2 - popupWidth / 2;
+  int popupY = height / 2 - popupHeight / 2;
+  drawPopupWindow(popupWidth, popupHeight, popupX, popupY);
+  
+  // Draw title
+  drawTitle("TOP 10", blue, popupX + popupWidth/2,popupY + 30, 48);
+  
+  drawTitle("1.", color(255, 215, 0), popupX + 30,popupY + 90, 48);
+  drawTitle("2.", color(192, 192, 192), popupX + 30,popupY + 145, 48);
+  drawTitle("3.", color(205, 127, 50), popupX + 30,popupY + 200, 48);
+  fill(blue);
+  textSize(35);
+  text("  4.\n  5.\n   6. \n   7. \n   8. \n   9. \n10.", popupX + 30, height/2 + 70);
+  
+  textSize(30);
+  fill(0);
+  for (int i = 0; i < 3; i++) {
+    float yOffset = popupY + 110 + i * 50;
+    textAlign(CENTER);
+    if (jogadores != null && i < jogadores.length && jogadores[i] != null) {
+      text(jogadores[i], popupX + popupWidth / 2, yOffset);
+    } else {
+      text("...", popupX + popupWidth / 2, yOffset);
+    }
+  }
+  for (int i = 3; i < 10; i++) {
+    float yOffset = popupY + 135 + i * 41;
+    textAlign(CENTER);
+    if (jogadores != null && i < jogadores.length && jogadores[i] != null) {
+      text(jogadores[i], popupX + popupWidth / 2, yOffset);
+    } else {
+      text("...", popupX + popupWidth / 2, yOffset);
+    }
+  }
+  
+  drawReturnMessage(popupWidth, popupHeight - 10, popupX, popupY);
 }
