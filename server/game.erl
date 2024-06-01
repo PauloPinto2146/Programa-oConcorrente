@@ -163,9 +163,9 @@ alteraPosicaoPlayer({Combustivel,Angulo,Velocidade,VeX,VeY,Pid,PosicaoX,PosicaoY
     end,
     if 
         VeY > 0 ->
-            NewVeY = VeY - 0.3;
+            NewVeY = VeY - 0.15;
         VeY < 0 ->
-            NewVeY = VeY + 0.3;
+            NewVeY = VeY + 0.15;
         VeY == 0 ->
             NewVeY = VeY
     end,
@@ -307,7 +307,7 @@ check_collision_PP({Key1,Value1},[{Key2,Value2}|RestPL2])->
                 true ->
                     io:format("Collision detected between player ~p and ~p\n", [Player1,Player2]),
                     K1 = {Player1, Socket1, From1},
-                    K2 = {Player1, Socket1, From1},
+                    K2 = {Player2, Socket2, From2},
                     self() ! {colision,K1,K2,NewVeX1,NewVeY1,NewVeX2,NewVeY2};
                 false -> 
                     ok
@@ -382,12 +382,12 @@ loop(PlayersMap,PlanetMap,Countdown)->
         {colision,K1,K2,NewVeX1,NewVeY1,NewVeX2,NewVeY2}->
             {C1,A1,V1,_,_,Pid1,PX1,PY1} = maps:get(K1, PlayersMap),
             {C2,A2,V2,_,_,Pid2,PX2,PY2} = maps:get(K2, PlayersMap),
-            NewX1 = PX2 + (math:cos(A2*(math:pi()/180))*V2) + NewVeX2*2,
-            NewY1 = PY2 - (math:sin(A2*(math:pi()/180))*V2) + NewVeY2*2,
-            NewX2 = PX1 + (math:cos(A1*(math:pi()/180))*V1) + NewVeX1*2,
-            NewY2 = PY1 - (math:sin(A1*(math:pi()/180))*V1) + NewVeY1*2,
+            NewX1 = PX1 + (math:cos(A1*(math:pi()/180))*V1) + NewVeX1,
+            NewY1 = PY1 - (math:sin(A1*(math:pi()/180))*V1) + NewVeY1,
+            NewX2 = PX2 + (math:cos(A2*(math:pi()/180))*V2) + NewVeX2,
+            NewY2 = PY2 - (math:sin(A2*(math:pi()/180))*V2) + NewVeY2,
             P1 = {C1,A1,V1,NewVeX1,NewVeY1,Pid1,NewX1,NewY1},
-            P2 = {C2,A1,V2,NewVeX2,NewVeY2,Pid2,NewX2,NewY2},
+            P2 = {C2,A2,V2,NewVeX2,NewVeY2,Pid2,NewX2,NewY2},
             PM = maps:put(K1, P1, PlayersMap),
             NewPlayersMap = maps:put(K2, P2, PM),
             loop(NewPlayersMap,PlanetMap,Countdown)

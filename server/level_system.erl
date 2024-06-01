@@ -3,7 +3,6 @@
 		new_player/1,
 		top10/0,
 		print_top_players/3,
-		map_tolist_level/1,
 		win_game/1,
 		lose_game/1,
 		get_level/1,
@@ -50,13 +49,10 @@ lose_game(Username)->
 	?MODULE ! {lose_game,Username,self()},
 	receive
 		{level_down,_From} -> 
-			io:format("Entrei no leveldown\n"),
 			{level_down};
 		{ok,_From} -> 
-			io:format("Entrei no ok\n"),
 			{ok};
 		{invalid,_From} -> 
-			io:format("Entrei no invalido\n"),
 			{invalid}
 	end.
 
@@ -67,15 +63,19 @@ top10()->
 	end.
 
 print_top_players(_, 0,Res) ->
-    Res;
-print_top_players([{Player,Nivel,DerrCons} | Tail], Count,Res) ->
+	SortedPlayers = string:join(Res, ","),
+    SortedPlayers;
+
+print_top_players([], _,Res) ->
+	SortedPlayers = string:join(Res, ","),
+    SortedPlayers;
+
+print_top_players([{Player,{Nivel,_,_,_,DerrCons}} | Tail], Count,Res) ->
 	%Primeiro criterio - nivel
 	%Segundo criterio - Derrotas consecutivas
-    NewRes = lists:append([Player,Nivel,DerrCons],Res),
+	PlayerInfo = io_lib:format("~w,~w,~w", [Player, Nivel, DerrCons]),
+    NewRes = lists:append([PlayerInfo], Res),
     print_top_players(Tail, Count - 1, NewRes).
-
-map_tolist_level(PlayerMap)->
-	maps:fold(fun(Username, {Nivel, _, _, DerrCons}, Acc) -> maps:put(Username, Nivel, DerrCons, Acc) end, #{}, PlayerMap).
 
 get_level(Username)->
 	?MODULE ! {get_map,self()},
@@ -141,13 +141,12 @@ loop(Map)->
 					loop(Map)
 			end;
 		{top10,From}->
-			Map_only_level = map_tolist_level(Map),
-			List = maps:to_list(Map_only_level),
-			Sp = lists:keysort(2,List),
-			CompareFun = fun({_, _, Losses1}, {_, _, Losses2}) -> Losses1 >= Losses2 end,
+			PlayerList =maps:to_list(Map),
+			Sp = lists:keysort(2,PlayerList),
+			CompareFun = fun({_,{_,_,_,_,Losses1}}, {_,{_,_,_,_,Losses2}}) -> Losses1 >= Losses2 end,
 			SortedPlayers = lists:sort(CompareFun,Sp),
     		Top10 = print_top_players(SortedPlayers, 10,[]),
-			From ! Top10,
+			From ! {Top10,?MODULE},
     		loop(Map);
     	{get_map,From}->
 			From ! {receive_map,Map},

@@ -1,9 +1,9 @@
 -module(servidor).
 -export([start/0,user/4,is_substring/2]).
--import(login_manager, [startLoginManager/0,logout/1,login/2,create_account/2,top10/0,
+-import(login_manager, [startLoginManager/0,logout/1,login/2,create_account/2,
 		close_account/2]).
 -import(lobby_manager, [startLobbyManager/0,find_Lobby/3,cancel_find/2]).
--import(level_system, [startLevelSystem/0,win_game/1,lose_game/1,get_level/1,
+-import(level_system, [startLevelSystem/0,win_game/1,lose_game/1,get_level/1,top10/0,
 		print_top_players/2]).
 -import(game, [startGame/1]).
 -import(jogador,[startJogador/0]).
@@ -210,14 +210,23 @@ user(Sock,Mode,PidJogador,PidPartida) ->
 				io:format("~p won the game\n",[Username]),
 				user(Sock,1,null,null);
 			_ ->
-				user(Sock,1,null,null)
+				user(Sock,1,null,null);
+			["50"] ->
+				io:format("Recebi socket 50\n"),
+				Top10Str = top10(),
+				io:format("~p\n",Top10Str),
+				io_lib:format("top10list,~p",Top10Str),
+				gen_tcp:send(Sock,Top10Str)
 		end;
 	{tcp, _, Data} when Mode =:= 0 ->
 		io:format("~p\n",[Data]),
 		case string:split(binary_to_list(Data), " ",all) of
 			["50"] ->
-				Top10List = top10(),
-				gen_tcp:send(Sock,Top10List);
+				io:format("Entrei no 50\n"),
+				Top10Str = top10(),
+				io_lib:format("top10list,~p",Top10Str),
+				io:format("lancei top10\n"),
+				gen_tcp:send(Sock,Top10Str);
 			["10", _Username] ->
 				user(Sock,0,null,null);
 			["00", Username, Password] -> %Login Protocol Code - 00
@@ -275,7 +284,9 @@ user(Sock,Mode,PidJogador,PidPartida) ->
         _ ->
             io:format("Utilizador desconectado\n")
 		end;
-	{tcp_closed, _}->
+	{tcp_closed, _} when Mode =:= 1->
+		io:format("Utilizador desconectado\n");
+	{tcp_closed, _} when Mode =:= 0->
 		io:format("Utilizador desconectado\n");
 	{tcp_error, _, _} ->
 		io:format("Error\n")
