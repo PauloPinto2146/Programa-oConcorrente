@@ -120,6 +120,25 @@ void keyReleased() {
           break;
         case 3:
           prevMenu = "MENU";
+          socket.write("50");
+          println("Socket lancado: 50");
+          if (socket.available() > 0) {
+            String data = socket.readString();
+            if (data != null) {
+              receivedData = data.trim();
+              println("Received: " + receivedData);
+            } else {
+              errorText = "Unknown Error";
+              activeScreen = "ERROR_POPUP";
+              println("Null Socket");
+            }
+          }
+          if (receivedData.startsWith("top10list")){
+             String[] jog = receivedData.split(",");
+             for (int i = 1; i < jog.length; i++) {
+                jogadores[i - 1] = jog[i];
+            }
+          }
           activeScreen = "TOP10";
           break;
         case 4:
@@ -254,6 +273,25 @@ void keyReleased() {
           break;
         case 3:
           prevMenu = "LOBBY";
+          socket.write("50");
+          println("Socket lancado: 50");
+          if (socket.available() > 0) {
+            String data = socket.readString();
+            if (data != null) {
+              receivedData = data.trim();
+              println("Received: " + receivedData);
+            } else {
+              errorText = "Unknown Error";
+              activeScreen = "ERROR_POPUP";
+              println("Null Socket");
+            }
+          }
+          if (receivedData.startsWith("top10list")){
+             String[] jog = receivedData.split(",");
+             for (int i = 1; i < jog.length; i++) {
+                jogadores[i - 1] = jog[i];
+            }
+          }
           activeScreen = "TOP10";
           break;
         case 4:
@@ -265,7 +303,6 @@ void keyReleased() {
             if (data != null) {
               receivedData = data.trim();
               println("Received: " + receivedData);
-              println("ESTOU NO LOBBY KEYS RELEASED");
             } else {
               errorText = "Unknown Error";
               activeScreen = "ERROR_POPUP";

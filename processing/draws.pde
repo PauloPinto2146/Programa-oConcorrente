@@ -560,7 +560,7 @@ void drawWinScreen(){
   drawPlanet(blue, 90, popupX + popupWidth, popupY + popupHeight - 10);
 }
 
-void drawTop10(String jogadores[]){
+void drawTop10(){
   backgroundStars();
 
   // Draw popup window

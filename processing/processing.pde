@@ -1,5 +1,7 @@
 import processing.net.*;
 
+String jogadores[];
+
 float angle1;
 float angle2;
 float angle3;
@@ -101,6 +103,8 @@ void draw() {
     drawLossScreen();
   } else if(activeScreen == "WIN"){
     drawWinScreen();
+  } else if (activeScreen == "TOP10"){
+    drawTop10();
   }
 }
 
@@ -126,6 +130,7 @@ void backgroundStars() {
   }
 }
 void drawGame() {
+  frameRate(60);
   backgroundStars();
   
   if (socket.available() > 0) {
@@ -213,7 +218,20 @@ void drawGame() {
       p1x = resultList.remove(0);
       p1y = resultList.remove(0);
       
-      drawNave(p1x,p1y,angulo1,0.7,color(0,0,255));
+      switch(numJogador){
+        case 1:
+          drawNave(p1x,p1y,angulo1,0.7,color(0,0,255));
+          break;
+        case 2:
+          drawNave(p1x,p1y,angulo1,0.7,color(255,0,0));
+          break;
+        case 3:
+          drawNave(p1x,p1y,angulo1,0.7,color(0,255,0));
+          break;
+        case 4:
+          drawNave(p1x,p1y,angulo1,0.7,color(255,255,0));
+          break;
+      }
       
       switch(numJogador){
         case 1:
