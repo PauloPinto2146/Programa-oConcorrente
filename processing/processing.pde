@@ -204,6 +204,7 @@ void drawGame() {
       x4 = 540 + cos(angle4) * 340;
       y4 = 360 + sin(angle4) * 340;
       angle4 += velocidade4;
+ 
     //[{Combustivel1,Angulo1,velocidade1,vex1,vey1,Pid1,P1X,P1Y},
     // {Combustivel2,Angulo2,velocidade2,vex2,vey2,Pid2,P2X,P2Y},
     // {Combustivel3,Angulo3,velocidade3,vex3,vey3,Pid3,P3X,P3Y},

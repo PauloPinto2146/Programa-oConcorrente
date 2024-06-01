@@ -122,6 +122,7 @@ void keyReleased() {
           prevMenu = "MENU";
           socket.write("50");
           println("Socket lancado: 50");
+          delay(50);
           if (socket.available() > 0) {
             String data = socket.readString();
             if (data != null) {

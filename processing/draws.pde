@@ -45,7 +45,7 @@ void drawMenu() {
   drawPopupWindow(popupWidth, popupHeight, popupX, popupY);
   
   // Draw title
-  drawTitle("Speiçe Inbajion", blue, width / 2, height / 4 + 25, 48);
+  drawTitle("Astral Saga Showdown", blue, width / 2, height / 4 + 25, 48);
 
   // Calculate the y-position for the first button
   int startY = height / 2 - buttonHeight;
@@ -244,29 +244,65 @@ void drawLoadingScreen() {
 
 // Draw button function
 void drawButton(int x, int y, String label, boolean focused, color buttonColor) {
+  int shadowOffset = 5;
+  fill(0, 50);
+  noStroke();
+  rect(x + shadowOffset, y + shadowOffset, buttonWidth, buttonHeight, 20);
+  
+  pushStyle();
   if (focused) {
-    fill(lerpColor(buttonColor, color(0), 0.3));
+    stroke(23, 50, 193);
+    strokeWeight(4);
   } else {
-    fill(buttonColor);
+    noStroke();
   }
+  fill(buttonColor);
   rect(x, y, buttonWidth, buttonHeight, 20);
+  popStyle();
+  
+  noStroke();
+  fill(255, 100);
+  beginShape();
+  vertex(x, y);
+  vertex(x + buttonWidth, y);
+  vertex(x + buttonWidth, y + buttonHeight * 0.5);
+  vertex(x, y + buttonHeight * 0.5);
+  endShape(CLOSE);
 
-  // Button text
-  fill(white);
+  // Text
+  fill(255);
+  textAlign(CENTER, CENTER);
   textSize(24);
   text(label, x + buttonWidth / 2, y + buttonHeight / 2);
 }
-
 void drawTextBox(int x, int y, boolean focused, color boxColor, String text) {
+  int shadowOffset = 5;
+  fill(0, 50);
+  noStroke();
+  rect(x + shadowOffset, y + shadowOffset, TextBoxWidth, TextBoxHeight, 10);
+  
+  pushStyle();
   if (focused) {
+    stroke(23, 50, 193);
+    strokeWeight(3);
     fill(lerpColor(boxColor, color(0), 0.1));
   } else {
+    noStroke();
     fill(boxColor);
   }
-  rect(x, y, TextBoxWidth, TextBoxHeight);
+  rect(x, y, TextBoxWidth, TextBoxHeight, 10);
+  popStyle();
+  
+  noStroke();
+  fill(255, 100);
+  beginShape();
+  vertex(x, y);
+  vertex(x + TextBoxWidth, y);
+  vertex(x + TextBoxWidth, y + TextBoxHeight * 0.5);
+  vertex(x, y + TextBoxHeight * 0.5);
+  endShape(CLOSE);
 
-  // Display the text
-  fill(0); // Black color
+  fill(0);
   textAlign(CENTER, CENTER);
   textSize(24);
   text(text, x + TextBoxWidth / 2, y + TextBoxHeight / 2);
